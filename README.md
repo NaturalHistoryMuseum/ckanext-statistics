@@ -5,3 +5,4 @@ Natural History Museum stats plugin
 # Creates new API endpoint
 
 
+TODO: Add cron
