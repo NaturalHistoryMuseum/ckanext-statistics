@@ -23,6 +23,6 @@ setup(
             [ckan.plugins]
             statistics=ckanext.statistics.plugin:StatisticsPlugin
             [paste.paster_command]
-            stats=ckanext.statistics.commands.stats:StatsCommand
+            statistics=ckanext.statistics.commands.statistics:StatisticsCommand
         """,
 )
