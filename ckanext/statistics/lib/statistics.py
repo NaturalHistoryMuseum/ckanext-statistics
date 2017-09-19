@@ -17,7 +17,7 @@ class Statistics(object):
 
     def _check_access(self):
         """ Ensure we have access to the defined resource """
-        p.toolkit.check_access('view_stats', self.context, self.params)
+        p.toolkit.check_access('view_statistics', self.context, self.params)
 
     def validate(self):
         schema = self.context.get('schema', self.schema)
@@ -46,5 +46,5 @@ class Statistics(object):
         Fetch the statistics
         """
         self._check_access()
-        params = {k: self.params.get(k, None) for k in ['year', 'month']}
+        params = {k: self.params.get(k, None) for k in self.schema.keys()}
         return self._get_statistics(**params)

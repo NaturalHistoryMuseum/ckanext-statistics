@@ -1,9 +1,9 @@
 import ckan.plugins as p
 
 
-def view_stats(context, data_dict):
+def view_statistics(context, data_dict):
 
-    authorized = p.toolkit.check_access('view_stats', context, data_dict)
+    authorized = p.toolkit.check_access('view_statistics', context, data_dict)
 
     if not authorized:
         return {

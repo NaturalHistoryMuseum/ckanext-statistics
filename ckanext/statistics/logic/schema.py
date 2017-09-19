@@ -30,9 +30,10 @@ def statistics_downloads_schema():
 
 def statistics_dataset_schema():
     """
-    Month and Year parameters
+    Resource ID
     :return: schema
     """
-    schema = statistics_downloads_schema()
-    schema['resource_id'] = [ignore_missing, resource_id_exists]
+    schema = {
+        'resource_id': [ignore_missing, resource_id_exists],
+    }
     return schema

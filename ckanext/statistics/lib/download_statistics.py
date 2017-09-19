@@ -12,7 +12,6 @@ from ckan.model.resource import Resource, ResourceGroup
 from ckan.model.package import Package
 from ckanext.statistics.model.gbif_download import GBIFDownload
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
-from ckanext.statistics.model.datastore import DatastoreStat
 
 from ckanext.statistics.lib.statistics import Statistics
 from ckanext.statistics.logic.schema import statistics_downloads_schema

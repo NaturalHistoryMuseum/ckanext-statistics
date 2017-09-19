@@ -2,12 +2,12 @@ import copy
 from sqlalchemy import sql, case
 from collections import OrderedDict
 import ckan.logic as logic
-from ckan.common import c
+from ckan.common import c, _
 import ckan.model as model
-from ckan.model.resource import Resource, ResourceGroup
-from ckan.model.package import Package
+import logging
+import ckan.plugins as p
+import ckan.lib.base as base
 
-from ckanext.statistics.model.datastore import DatastoreStat
 from ckanext.statistics.lib.statistics import Statistics
 from ckanext.statistics.logic.schema import statistics_dataset_schema
 
@@ -15,6 +15,13 @@ _check_access = logic.check_access
 NotFound = logic.NotFound
 NotAuthorized = logic.NotAuthorized
 ValidationError = logic.ValidationError
+get_action = logic.get_action
+
+render = base.render
+abort = base.abort
+redirect = base.redirect
+
+log = logging.getLogger(__name__)
 
 
 class DatasetStatistics(Statistics):
@@ -24,66 +31,78 @@ class DatasetStatistics(Statistics):
 
     schema = statistics_dataset_schema()
 
-    def _get_statistics(self, year=None, month=None):
+    def _get_statistics(self, resource_id=None):
         """
         Fetch the statistics
         """
-        year_part = sql.func.date_part('year', DatastoreStat.date).label('year')
-        month_part = sql.func.date_part('month', DatastoreStat.date).label('month')
-
-        rows = model.Session.query(
-            sql.func.concat(month_part, '/', year_part).label("date"),
-            sql.func.max(DatastoreStat.count).label("count"),
-            Resource.id.label("resource_id"),
-            Resource.name,
-            Package.name.label('pkg_name'),
-            Package.title.label('pkg_title'),
-        ).join(Resource).join(ResourceGroup).join(Package).filter(
-            Resource.state == 'active'
-        ).filter(
-            Package.state == 'active'
-        ).group_by(
-            year_part,
-            month_part,
-            Resource.id,
-            Resource.name,
-            Package.name,
-            Package.title
-        ).order_by(year_part, month_part)
-
-        if year:
-            rows = rows.filter(sql.extract('year', DatastoreStat.date) == year)
-        if month:
-            rows = rows.filter(sql.extract('month', DatastoreStat.date) == month)
-
-        resource_id = self.params.get('resource_id', None)
-        if resource_id:
-            rows = rows.filter(Resource.id == resource_id)
-
-        stats = {}
         context = {'model': model, 'user': c.user or c.author, 'auth_user_obj': c.userobj}
+        if resource_id:
+            return self._get_resource_statistics(resource_id, context)
+        else:
+            return self._get_all_resources_statistics(context)
 
-        for row in rows:
-            try:
-                _check_access('resource_show', context, row.__dict__)
-            except NotAuthorized:
-                pass
-            else:
-                stats.setdefault(row.__dict__['resource_id'], {
-                    'id': row.__dict__['resource_id'],
-                    'pkg_name': row.__dict__['pkg_name'],
-                    'pkg_title': row.__dict__['pkg_title'],
-                    'name': row.__dict__['name'],
-                    'count': OrderedDict()
-                })
-                stats[row.__dict__['resource_id']]['count'][row.__dict__['date']] = row.__dict__['count']
+    @staticmethod
+    def _get_all_resources_statistics(context):
 
-        total = 0
-        for s in stats.values():
-            last_date = s['count'].keys()[-1]
-            total += s['count'][last_date]
-
-        return {
-            'total': total,
-            'resources': stats.values()
+        stats = {
+            'total': 0,
+            'resources': []
         }
+
+        pkgs = p.toolkit.get_action('current_package_list_with_resources')(context, {'limit': 200})
+        for pkg_dict in pkgs:
+            if pkg_dict['private'] or pkg_dict['state'] != 'active':
+                continue
+
+            if 'resources' in pkg_dict:
+                for resource in pkg_dict['resources']:
+                    if resource['state'] != 'active':
+                        continue
+                    # Does this have an activate datastore table?
+                    if resource['url_type'] in ['datastore', 'upload', 'dataset']:
+                        data = {
+                            'resource_id': resource['id'],
+                            'limit': 1
+                        }
+                        try:
+                            search = p.toolkit.get_action('datastore_search')({}, data)
+                        except logic.NotFound:
+                            # Not every file is uploaded to the datastore, so ignore it
+                            continue
+
+                        stats['resources'].append(
+                            {
+                                'pkg_name': pkg_dict['name'],
+                                'pkg_title': pkg_dict['title'],
+                                'name': resource['name'],
+                                'id': resource['id'],
+                                'total': search.get('total', 0)
+                            }
+                        )
+                        stats['total'] += search.get('total', 0)
+        return stats
+
+    def _get_resource_statistics(self, resource_id, context):
+        """
+        Get stats for an individual resource
+        @param resource_id:
+        @return:
+        """
+        try:
+            resource = get_action('resource_show')(self.context, {'id': resource_id})
+        except NotFound:
+            abort(404, _('Resource not found'))
+        except NotAuthorized:
+            abort(401, _('Unauthorized to read resource %s') % resource_id)
+        else:
+
+            # TODO - Add break down over time for SOLR Datasets
+            # k = 'ckanext.datasolr.'
+            # solr_datasets = [c.replace(k, '') for c in pylons.config.keys() if k in c]
+            # facet.date=created&facet.date.start=2010-01-01T00:00:00.000Z&facet.date.end=NOW&facet.date.gap=%2B1MONTH
+            search = p.toolkit.get_action('datastore_search')({}, {'resource_id': resource_id, 'limit': 1})
+
+            return {
+                'resource': resource,
+                'total': search['total']
+            }
