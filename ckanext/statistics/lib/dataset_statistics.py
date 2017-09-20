@@ -1,6 +1,4 @@
-import copy
-from sqlalchemy import sql, case
-from collections import OrderedDict
+from solr import SolrException
 import ckan.logic as logic
 from ckan.common import c, _
 import ckan.model as model
@@ -66,7 +64,7 @@ class DatasetStatistics(Statistics):
                         }
                         try:
                             search = p.toolkit.get_action('datastore_search')({}, data)
-                        except logic.NotFound:
+                        except (logic.NotFound, SolrException):
                             # Not every file is uploaded to the datastore, so ignore it
                             continue
 
