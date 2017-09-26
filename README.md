@@ -42,7 +42,7 @@ GBIF Download statistics are collected by a paster command:
 paster --plugin=ckanext-statistics statistics gbif -c /etc/ckan/default/development.ini
 ```
 
-This is run daily on CRON.
+This runs daily on CRON.
 
 # TODO: 
 
