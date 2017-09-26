@@ -12,7 +12,10 @@ Displays number of download events & records downloaded for the collections, res
 
 ### Parameters:
 
-Download statistics be filtered by year (YYYY) and month (MM).
+Download statistics can be filtered by date.
+
+* Year (YYYY)
+* Month (MM)
 
 ```
 http://data.nhm.ac.uk/api/3/action/download_statistics?year=2017&month=08
@@ -28,7 +31,9 @@ http://data.nhm.ac.uk/api/3/action/dataset_statistics
 
 ### API Parameters:
 
-Dataset statistics can be filtered by resource ID
+Dataset statistics can be filtered by resource ID.
+
+* resource_id (UUID)
 
 ```
 http://data.nhm.ac.uk/api/3/action/dataset_statistics?resource_id=05ff2255-c38a-40c9-b657-4ccb55ab2feb
