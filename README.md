@@ -26,7 +26,7 @@ Provides total number of records across all datasets.
 http://data.nhm.ac.uk/api/3/action/dataset_statistics
 ```
 
-### Parameters:
+### API Parameters:
 
 Dataset statistics can be filtered by resource ID
 
