@@ -2,9 +2,7 @@
 
 #### API for accessing Natural History Museum Data Portal statistics.
 
-# API Endpoint
-
-### Downloads
+# Download statistics API
 
 ```
 http://data.nhm.ac.uk/api/3/action/download_statistics
@@ -12,7 +10,7 @@ http://data.nhm.ac.uk/api/3/action/download_statistics
 
 Displays number of download events & records downloaded for the collections, research and GBIF datasets.
 
-#### Parameters
+### Parameters:
 
 Download statistics be filtered by year (YYYY) and month (MM).
 
@@ -20,13 +18,25 @@ Download statistics be filtered by year (YYYY) and month (MM).
 http://data.nhm.ac.uk/api/3/action/download_statistics?year=2017&month=08
 ```
 
-### Dataset
+# Dataset statistics API
 
-Provides count of 
+Provides total number of records across all datasets.
+
+```
+http://data.nhm.ac.uk/api/3/action/dataset_statistics
+```
+
+### Parameters:
+
+Dataset statistics can be filtered by resource ID
+
+```
+http://data.nhm.ac.uk/api/3/action/dataset_statistics?resource_id=05ff2255-c38a-40c9-b657-4ccb55ab2feb
+```
 
 # Commands
 
-GBIF Download statistics are collected by running command:
+GBIF Download statistics are collected by a paster command:
 
 ```python
 paster --plugin=ckanext-statistics statistics gbif -c /etc/ckan/default/development.ini
@@ -36,4 +46,5 @@ This is run daily on CRON.
 
 # TODO: 
 
-Run on cron
+* Set up GBIF stats command to run on cron.
+* Dataset statistics - for collections datasets show changes over time using created field.
