@@ -38,7 +38,7 @@ http://data.nhm.ac.uk/api/3/action/dataset_statistics?resource_id=05ff2255-c38a-
 
 GBIF Download statistics are collected by a paster command:
 
-```python
+```
 paster --plugin=ckanext-statistics statistics gbif -c /etc/ckan/default/development.ini
 ```
 
