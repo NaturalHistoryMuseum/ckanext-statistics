@@ -17,7 +17,7 @@ class StatisticsCommand(CkanCommand):
     """
     Create stats from GBIF
 
-    paster statistics gbif -c /etc/ckan/default/development.ini
+    paster --plugin=ckanext-statistics statistics gbif -c /etc/ckan/default/development.ini
 
     """
 
@@ -71,6 +71,7 @@ class StatisticsCommand(CkanCommand):
                     doi=record['download']['doi'],
                     date=record['download']['created'],
                 )
-                model.Session.add(download)
+                model.Session.merge(download)
+                model.Session.commit()
 
             offset += limit
