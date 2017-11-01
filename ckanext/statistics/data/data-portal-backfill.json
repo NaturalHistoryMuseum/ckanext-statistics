@@ -1,0 +1,258 @@
+{
+  "2015": {
+    "7": {
+      "collections": {
+        "download_events": 160,
+        "records": 15379148
+      },
+      "research": {
+        "download_events": 23,
+        "records": 23179
+      }
+    },
+    "8": {
+      "collections": {
+        "download_events": 171,
+        "records": 17892937
+      },
+      "research": {
+        "download_events": 39,
+        "records": 18030
+      }
+    },
+    "9": {
+      "collections": {
+        "download_events": 159,
+        "records": 33534010
+      },
+      "research": {
+        "download_events": 48,
+        "records": 53539
+      }
+    },
+    "10": {
+      "collections": {
+        "download_events": 203,
+        "records": 28012579
+      },
+      "research": {
+        "download_events": 65,
+        "records": 31526
+      }
+    },
+    "11": {
+      "collections": {
+        "download_events": 146,
+        "records": 14844112
+      },
+      "research": {
+        "download_events": 65,
+        "records": 59150
+      }
+    },
+    "12": {
+      "collections": {
+        "download_events": 142,
+        "records": 18408598
+      },
+      "research": {
+        "download_events": 68,
+        "records": 38216
+      }
+    }
+  },
+  "2016": {
+    "1": {
+      "collections": {
+        "download_events": 197,
+        "records": 59111602
+      },
+      "research": {
+        "download_events": 88,
+        "records": 345686
+      }
+    },
+    "2": {
+      "collections": {
+        "download_events": 189,
+        "records": 42938905
+      },
+      "research": {
+        "download_events": 68,
+        "records": 303153
+      }
+    },
+    "3": {
+      "collections": {
+        "download_events": 212,
+        "records": 53907458
+      },
+      "research": {
+        "download_events": 86,
+        "records": 231104
+      }
+    },
+    "4": {
+      "collections": {
+        "download_events": 208,
+        "records": 51188841
+      },
+      "research": {
+        "download_events": 7,
+        "records": 43164
+      }
+    },
+    "5": {
+      "collections": {
+        "download_events": 174,
+        "records": 51188841
+      },
+      "research": {
+        "download_events": 59,
+        "records": 277857
+      }
+    },
+    "6": {
+      "collections": {
+        "download_events": 209,
+        "records": 90896196
+      },
+      "research": {
+        "download_events": 38,
+        "records": 151535
+      }
+    },
+    "7": {
+      "collections": {
+        "download_events": 166,
+        "records": 63357118
+      },
+      "research": {
+        "download_events": 122,
+        "records": 196062
+      }
+    },
+    "8": {
+      "collections": {
+        "download_events": 179,
+        "records": 44623852
+      },
+      "research": {
+        "download_events": 160,
+        "records": 589613
+      }
+    },
+    "9": {
+      "collections": {
+        "download_events": 156,
+        "records": 28303051
+      },
+      "research": {
+        "download_events": 91,
+        "records": 116
+      }
+    },
+    "10": {
+      "collections": {
+        "download_events": 218,
+        "records": 83839
+      },
+      "research": {
+        "download_events": 94,
+        "records": 9844
+      }
+    },
+    "11": {
+      "collections": {
+        "download_events": 151,
+        "records": 88811497
+      },
+      "research": {
+        "download_events": 81,
+        "records": 885928
+      }
+    },
+    "12": {
+      "collections": {
+        "download_events": 204,
+        "records": 55828171
+      },
+      "research": {
+        "download_events": 280,
+        "records": 253232210
+      }
+    }
+  },
+  "2017": {
+    "1": {
+      "collections": {
+        "download_events": 168,
+        "records": 68841259
+      },
+      "research": {
+        "download_events": 346,
+        "records": 196800774
+      }
+    },
+    "2": {
+      "collections": {
+        "download_events": 273,
+        "records": 55432926
+      },
+      "research": {
+        "download_events": 216,
+        "records": 189124800
+      }
+    },
+    "3": {
+      "collections": {
+        "download_events": 314,
+        "records": 84899247
+      },
+      "research": {
+        "download_events": 181,
+        "records": 149970009
+      }
+    },
+    "4": {
+      "collections": {
+        "download_events": 246,
+        "records": 76536818
+      },
+      "research": {
+        "download_events": 131,
+        "records": 133301702
+      }
+    },
+    "5": {
+      "collections": {
+        "download_events": 262,
+        "records": 80790154
+      },
+      "research": {
+        "download_events": 151,
+        "records": 107458151
+      }
+    },
+    "6": {
+      "collections": {
+        "download_events": 235,
+        "records": 32257996
+      },
+      "research": {
+        "download_events": 160,
+        "records": 159519996
+      }
+    },
+    "7": {
+      "collections": {
+        "download_events": 169,
+        "records": 38920756
+      },
+      "research": {
+        "download_events": 113,
+        "records": 75239327
+      }
+    }
+  }
+}

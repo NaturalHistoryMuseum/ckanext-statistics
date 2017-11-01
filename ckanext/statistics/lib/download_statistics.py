@@ -1,4 +1,6 @@
 import copy
+import json
+import os
 from sqlalchemy import sql, case
 from collections import OrderedDict
 import ckan.plugins as p
@@ -30,6 +32,8 @@ class DownloadStatistics(Statistics):
         Fetch the statistics
         """
         result = self.ckanpackager_stats(year, month)
+        backfill = self._backfill_stats(year, month)
+        stats = self._merge(result, backfill)
         # Merge in the GBIF stats
         for k, v in self.gbif_stats(year, month).items():
             result.setdefault(k, default={})
@@ -121,3 +125,40 @@ class DownloadStatistics(Statistics):
                 'download_events': int(row.__dict__['download_events'])
             }
         return stats
+
+    @staticmethod
+    def _backfill_stats(year=None, month=None):
+        '''
+        Loads static data from a json file that can be used to fill gaps in the API's returned statistics.
+        :param year: the year to load data for
+        :type year:
+        :param month: the month to load data for
+        :type month:
+        :return: a dictionary of download statistics keyed on month/year
+        :rtype:
+        '''
+        backfill_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data/data-portal-backfill.json')
+        with open(backfill_file, 'r') as jsonfile:
+            backfill_data = json.load(jsonfile)
+
+        if year:
+            backfill_data = {k: v for k, v in backfill_data.items() if k == str(year)}
+        if month:
+            backfill_data = {y: {m: w for m, w in v.items() if m == str(month)} for y, v in backfill_data.items()}
+
+        stats = {}
+        for y in backfill_data:
+            for m in backfill_data[y]:
+                stats['{0}/{1}'.format(m, y)] = backfill_data[y][m]
+
+        return stats
+
+    @staticmethod
+    def _merge(stats_1, stats_2):
+        all_keys = list(set(stats_1.keys + stats_2.keys))
+        stats_3 = {k: {} for k in all_keys}
+        for key in all_keys:
+            key_stats = {}
+            sub_keys = list(set(stats_1.get(key, {}).keys + stats_2.get(key, {}).keys))
+            for sub in sub_keys:
+                key_stats[sub] = {}
