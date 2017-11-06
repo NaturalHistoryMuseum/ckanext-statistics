@@ -33,8 +33,8 @@ class DownloadStatistics(Statistics):
         Fetch the statistics
         """
         stats = self.ckanpackager_stats(year, month)
-        backfill = self._backfill_stats(year, month)
-        result = self._merge(stats, backfill)
+        backfill = self.backfill_stats('data-portal-backfill.json', year, month)
+        result = self.merge(stats, backfill)
         # Merge in the GBIF stats
         for k, v in self.gbif_stats(year, month).items():
             result.setdefault(k, default = {})
@@ -136,17 +136,20 @@ class DownloadStatistics(Statistics):
         return stats
 
     @staticmethod
-    def _backfill_stats(year = None, month = None):
+    def backfill_stats(filename, year = None, month = None):
         '''
         Loads static data from a json file that can be used to fill gaps in
         the API's returned statistics.
+        :param filename: the name of the json file containing the statistics
         :param year: the year to load data for
         :param month: the month to load data for
         :return: a dictionary of download statistics keyed on month/year
         '''
+        if filename is None:
+            return {}
         backfill_file = os.path.join(
             os.path.dirname(os.path.dirname(__file__)),
-            'data/data-portal-backfill.json')
+            'data', filename)
         with open(backfill_file, 'r') as jsonfile:
             backfill_data = json.load(jsonfile)
 
@@ -165,7 +168,7 @@ class DownloadStatistics(Statistics):
         return stats
 
     @staticmethod
-    def _merge(stats_1, stats_2):
+    def merge(stats_1, stats_2):
         '''
         Fills gaps in stats_1 with data from stats_2.
         :param stats_1: the primary dataset (has priority)
