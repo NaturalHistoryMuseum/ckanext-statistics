@@ -130,7 +130,13 @@ class DownloadStatistics(Statistics):
             rows = rows.filter(
                 sql.extract('month', CKANPackagerStat.inserted_on) == month)
         if resource_id:
-            rows = rows.filter(CKANPackagerStat.resource_id == resource_id)
+            # if only one resource ID is provided then it'll be a string not a
+            # list. To avoid writing two filters, one using equality and one
+            # using an in clause, we'll just make a list with one element in it
+            # and then use in
+            if isinstance(resource_id, basestring):
+                resource_id = [resource_id]
+            rows = rows.filter(CKANPackagerStat.resource_id.in_(resource_id))
 
         rows = rows.order_by(month_part, year_part).all()
 
