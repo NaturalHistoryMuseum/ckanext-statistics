@@ -24,6 +24,7 @@ def statistics_downloads_schema():
     schema = {
         'month': [ignore_missing, int_validator],
         'year': [ignore_missing, int_validator],
+        'resource_id': [ignore_missing, resource_id_exists],
     }
     return schema
 

@@ -28,18 +28,23 @@ class DownloadStatistics(Statistics):
 
     schema = statistics_downloads_schema()
 
-    def _get_statistics(self, year = None, month = None):
+    def _get_statistics(self, year = None, month = None, resource_id=None):
         """
         Fetch the statistics
         """
-        stats = self.ckanpackager_stats(year, month)
-        backfill = self.backfill_stats('data-portal-backfill.json', year, month)
-        result = self.merge(stats, backfill)
-        # Merge in the GBIF stats
-        for k, v in self.gbif_stats(year, month).items():
-            result.setdefault(k, default = {})
-            result[k]['gbif'] = v
-        return result
+        stats = self.ckanpackager_stats(year, month, resource_id)
+        # if a resource_id has been specified, only return the ckanpackager
+        # stats sources as the other stats aren't filterable by resource ID
+        if resource_id:
+            return stats
+        else:
+            backfill = self.backfill_stats('data-portal-backfill.json', year, month)
+            result = self.merge(stats, backfill)
+            # Merge in the GBIF stats
+            for k, v in self.gbif_stats(year, month).items():
+                result.setdefault(k, default = {})
+                result[k]['gbif'] = v
+            return result
 
     @staticmethod
     def gbif_stats(year = None, month = None):
@@ -81,11 +86,12 @@ class DownloadStatistics(Statistics):
         return stats
 
     @staticmethod
-    def ckanpackager_stats(year = None, month = None):
+    def ckanpackager_stats(year = None, month = None, resource_id=None):
         """
         Get ckan packager stats
         @param year:
         @param month:
+        @param resource_id:
         @return:
         """
 
@@ -123,6 +129,8 @@ class DownloadStatistics(Statistics):
         if month:
             rows = rows.filter(
                 sql.extract('month', CKANPackagerStat.inserted_on) == month)
+        if resource_id:
+            rows = rows.filter(CKANPackagerStat.resource_id == resource_id)
 
         rows = rows.order_by(month_part, year_part).all()
 
