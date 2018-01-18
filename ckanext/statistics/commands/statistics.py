@@ -4,25 +4,22 @@
 # This file is part of ckanext-statistics
 # Created by the Natural History Museum in London, UK
 
-import re
+import logging
+
 import os
 import requests
-import pylons
-import logging
-import ckan.model as model
-
-from ckan.lib.cli import CkanCommand
-
 from ckanext.statistics.model import Base
 from ckanext.statistics.model.gbif_download import GBIFDownload
+
+import ckan.model as model
+from ckan.plugins import toolkit
 
 log = logging.getLogger()
 
 
-class StatisticsCommand(CkanCommand):
-    '''
-    Create stats from GBIF
-
+class StatisticsCommand(toolkit.CkanCommand):
+    '''Create stats from GBIF
+    
     paster --plugin=ckanext-statistics statistics gbif -c /etc/ckan/default/development.ini
 
     '''
@@ -31,6 +28,7 @@ class StatisticsCommand(CkanCommand):
     usage = __doc__
 
     def command(self):
+        ''' '''
         self._load_config()
         # Create the table if it doesn't exist
         self._create_table()
@@ -44,13 +42,16 @@ class StatisticsCommand(CkanCommand):
 
     @staticmethod
     def _create_table():
+        ''' '''
         Base.metadata.create_all(model.meta.engine)
 
     @staticmethod
     def get_gbif_stats():
-        last_download = model.Session.query(GBIFDownload).order_by(GBIFDownload.date.desc()).first()
+        ''' '''
+        last_download = model.Session.query(GBIFDownload).order_by(
+            GBIFDownload.date.desc()).first()
 
-        dataset_uuid = pylons.config[u'ckanext.gbif.dataset_key']
+        dataset_uuid = toolkit.config[u'ckanext.gbif.dataset_key']
 
         offset = 0
         limit = 100
@@ -59,8 +60,12 @@ class StatisticsCommand(CkanCommand):
             print u'Retrieving page offset %s' % offset
 
             # Now GBIF is using angular, we can hit their json endpoint directly
-            url = os.path.join(u'http://api.gbif.org/v1/occurrence/download/dataset', dataset_uuid)
-            r = requests.get(url, params={u'offset': offset, u'limit': limit})
+            url = os.path.join(u'http://api.gbif.org/v1/occurrence/download/dataset',
+                               dataset_uuid)
+            r = requests.get(url, params={
+                u'offset': offset,
+                u'limit': limit
+                })
             response = r.json()
             if not response[u'results']:
                 return
@@ -76,7 +81,7 @@ class StatisticsCommand(CkanCommand):
                     count=record[u'numberRecords'],
                     doi=record[u'download'][u'doi'],
                     date=record[u'download'][u'created'],
-                )
+                    )
                 model.Session.merge(download)
                 model.Session.commit()
 
