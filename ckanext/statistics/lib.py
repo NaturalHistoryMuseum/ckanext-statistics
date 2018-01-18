@@ -1,8 +1,9 @@
+
 #!/usr/bin/env python
 # encoding: utf-8
-"""
-Created by Ben Scott on '24/08/2017'.
-"""
+#
+# This file is part of ckanext-statistics
+# Created by the Natural History Museum in London, UK
 
 from pylons import config
 import ckan.model as model

@@ -1,3 +1,9 @@
+#!/usr/bin/env python
+# encoding: utf-8
+#
+# This file is part of ckanext-statistics
+# Created by the Natural History Museum in London, UK
+
 import ckan.plugins
 import nose
 import paste.fixture
@@ -10,23 +16,23 @@ from ckanext.statistics.lib.download_statistics import DownloadStatistics
 
 eq_ = nose.tools.eq_
 
-backfill_fn = 'data-portal-backfill.json'
+backfill_fn = u'data-portal-backfill.json'
 
 
 class TestBackfillStatistics(object):
     @classmethod
     def setup_class(cls):
         cls.app = paste.fixture.TestApp(pylons.test.pylonsapp)
-        if not ckan.plugins.plugin_loaded('statistics'):
-            ckan.plugins.load('statistics')
+        if not ckan.plugins.plugin_loaded(u'statistics'):
+            ckan.plugins.load(u'statistics')
 
     @classmethod
     def teardown_class(cls):
-        ckan.plugins.unload('statistics')
+        ckan.plugins.unload(u'statistics')
 
     @staticmethod
     def _backfill_fn_exists():
-        fp = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data',
+        fp = os.path.join(os.path.dirname(os.path.dirname(__file__)), u'data',
                           backfill_fn)
         return os.path.exists(fp)
 
@@ -37,10 +43,10 @@ class TestBackfillStatistics(object):
     def test_not_empty_if_file_given(self):
         backfill_stats = DownloadStatistics.backfill_stats(
             backfill_fn) if self._backfill_fn_exists() else {}
-        assert self._backfill_fn_exists(), '{0} does not exist'.format(
+        assert self._backfill_fn_exists(), u'{0} does not exist'.format(
             backfill_fn)
-        assert isinstance(backfill_stats, dict), 'is not a dictionary'
-        assert len(backfill_stats) > 0, 'is empty'
+        assert isinstance(backfill_stats, dict), u'is not a dictionary'
+        assert len(backfill_stats) > 0, u'is empty'
 
     def test_filter_by_year(self):
         backfill_stats = {}
@@ -49,7 +55,7 @@ class TestBackfillStatistics(object):
             yr -= 1
             backfill_stats = DownloadStatistics.backfill_stats(backfill_fn,
                                                                year = yr)
-        assert len(backfill_stats.keys()) > 0, 'no results'
+        assert len(backfill_stats.keys()) > 0, u'no results'
         assert all(
             [k.endswith('/{0}'.format(yr)) for k in backfill_stats.keys()])
 
@@ -60,17 +66,17 @@ class TestBackfillStatistics(object):
             mnth += 1
             backfill_stats = DownloadStatistics.backfill_stats(backfill_fn,
                                                                month = mnth)
-        assert len(backfill_stats.keys()) > 0, 'no results'
+        assert len(backfill_stats.keys()) > 0, u'no results'
         assert all(
-            [k.startswith('{0}/'.format(mnth)) for k in backfill_stats.keys()])
+            [k.startswith(u'{0}/'.format(mnth)) for k in backfill_stats.keys()])
 
 
 class TestMerge(object):
     @classmethod
     def setup_class(cls):
         cls.app = paste.fixture.TestApp(pylons.test.pylonsapp)
-        if not ckan.plugins.plugin_loaded('statistics'):
-            ckan.plugins.load('statistics')
+        if not ckan.plugins.plugin_loaded(u'statistics'):
+            ckan.plugins.load(u'statistics')
         cls.ckan_stats = DownloadStatistics.ckanpackager_stats()
         cls.backfill_stats = DownloadStatistics.backfill_stats(backfill_fn)
         cls.merged_stats = DownloadStatistics.merge(cls.ckan_stats,
@@ -78,12 +84,12 @@ class TestMerge(object):
 
     @classmethod
     def teardown_class(cls):
-        ckan.plugins.unload('statistics')
+        ckan.plugins.unload(u'statistics')
 
     def test_ordereddict_output(self):
         assert isinstance(self.merged_stats,
-                          OrderedDict), 'merge result is {0}, ' \
-                                        'not OrderedDict'.format(
+                          OrderedDict), u'merge result is {0}, ' \
+                                        u'not OrderedDict'.format(
             type(self.merged_stats))
 
     def test_all_keys_present(self):
@@ -92,8 +98,8 @@ class TestMerge(object):
         ck_keys_in_merge = [(k in self.merged_stats.keys()) for k in
                             self.ckan_stats.keys()]
         assert all(
-            ck_keys_in_merge), 'not all ckanpackager keys are present in the ' \
-                               'merged output'
+            ck_keys_in_merge), u'not all ckanpackager keys are present in the ' \
+                               u'merged output'
         assert all(
-            bf_keys_in_merge), 'not all backfill keys are present in the merged output'
+            bf_keys_in_merge), u'not all backfill keys are present in the merged output'
 
