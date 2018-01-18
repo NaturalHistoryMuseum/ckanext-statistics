@@ -1,5 +1,7 @@
 # ckanext-statistics
 
+[![Travis branch](https://img.shields.io/travis/NaturalHistoryMuseum/ckanext-statistics/master.svg?style=flat-square)](https://travis-ci.org/NaturalHistoryMuseum/ckanext-statistics) [![Coveralls github branch](https://img.shields.io/coveralls/github/NaturalHistoryMuseum/ckanext-statistics/master.svg?style=flat-square)](https://coveralls.io/github/NaturalHistoryMuseum/ckanext-statistics)
+
 #### API for accessing Natural History Museum Data Portal statistics.
 
 # Download statistics API

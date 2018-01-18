@@ -1,16 +1,16 @@
-from setuptools import setup, find_packages
+from setuptools import find_packages, setup
 
-version = '0.1'
+__version__ = '0.2'
 
 setup(
     name='ckanext-statistics',
-    version=version,
+    version=__version__,
     description='NHM Stats plugin.',
     long_description='',
-    classifiers=[],  # Get strings from http://pypi.python.org/pypi?%3Aaction=list_classifiers
+    classifiers=[],
     keywords='',
-    author='Ben Scott',
-    author_email='ben@benscott.co.uk',
+    author='Natural History Museum',
+    author_email='data@nhm.ac.uk',
     url='',
     license='',
     packages=find_packages(exclude=['ez_setup', 'stats', 'tests']),
@@ -25,4 +25,4 @@ setup(
             [paste.paster_command]
             statistics=ckanext.statistics.commands.statistics:StatisticsCommand
         """,
-)
+    )
