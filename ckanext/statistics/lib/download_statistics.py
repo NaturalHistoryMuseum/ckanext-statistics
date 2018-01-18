@@ -4,56 +4,54 @@
 # This file is part of ckanext-statistics
 # Created by the Natural History Museum in London, UK
 
-import copy
-from datetime import datetime as dt
 import json
-import os
-from sqlalchemy import sql, case
 from collections import OrderedDict
-import ckan.plugins as p
-from ckan.plugins import PluginImplementations
-from ckan.lib.navl.dictization_functions import validate
-import ckanext.datastore.helpers as datastore_helpers
+from datetime import datetime as dt
 
-from pylons import config
-import ckan.model as model
-from ckan.model.resource import Resource, ResourceGroup
-from ckan.model.package import Package
-from ckanext.statistics.model.gbif_download import GBIFDownload
+import os
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
-
 from ckanext.statistics.lib.statistics import Statistics
 from ckanext.statistics.logic.schema import statistics_downloads_schema
+from ckanext.statistics.model.gbif_download import GBIFDownload
+from sqlalchemy import case, sql
+
+import ckan.model as model
+from ckan.plugins import toolkit
 
 
 class DownloadStatistics(Statistics):
-    '''
-    Class used to implement the download statistics action
+    '''Class used to implement the download statistics action
     Show records downloaded etc.,
+
+
     '''
 
     schema = statistics_downloads_schema()
 
-    def _get_statistics(self, year = None, month = None):
-        '''
-        Fetch the statistics
+    def _get_statistics(self, year=None, month=None):
+        '''Fetch the statistics
+
+        :param year:  (optional, default: None)
+        :param month:  (optional, default: None)
+
         '''
         stats = self.ckanpackager_stats(year, month)
         backfill = self.backfill_stats(u'data-portal-backfill.json', year, month)
         result = self.merge(stats, backfill)
         # Merge in the GBIF stats
         for k, v in self.gbif_stats(year, month).items():
-            result.setdefault(k, default = {})
+            result.setdefault(k, default={})
             result[k][u'gbif'] = v
         return result
 
     @staticmethod
-    def gbif_stats(year = None, month = None):
-        '''
-        Get GBIF download stats
-        @param year:
-        @param month:
-        @return: dict
+    def gbif_stats(year=None, month=None):
+        '''Get GBIF download stats
+
+        :param year: (optional, default: None)
+        :param month:  (optional, default: None)
+        :returns: dict
+
         '''
 
         stats = OrderedDict()
@@ -87,17 +85,17 @@ class DownloadStatistics(Statistics):
         return stats
 
     @staticmethod
-    def ckanpackager_stats(year = None, month = None):
-        '''
-        Get ckan packager stats
-        @param year:
-        @param month:
-        @return:
+    def ckanpackager_stats(year=None, month=None):
+        '''Get ckan packager stats
+
+        :param year: (optional, default: None)
+        :param month:  (optional, default: None)
+
         '''
 
         stats = OrderedDict()
-        indexlot_resource_id = config.get(u'ckanext.nhm.indexlot_resource_id')
-        specimen_resource_id = config.get(u'ckanext.nhm.specimen_resource_id')
+        indexlot_resource_id = toolkit.config.get(u'ckanext.nhm.indexlot_resource_id')
+        specimen_resource_id = toolkit.config.get(u'ckanext.nhm.specimen_resource_id')
 
         year_part = sql.func.date_part(u'year',
                                        CKANPackagerStat.inserted_on).label(
@@ -114,8 +112,8 @@ class DownloadStatistics(Statistics):
                     specimen_resource_id: True,
                     indexlot_resource_id: True
                     },
-                value = CKANPackagerStat.resource_id,
-                else_ = False
+                value=CKANPackagerStat.resource_id,
+                else_=False
                 ).label(u'collection')
 
             ).group_by(
@@ -133,7 +131,7 @@ class DownloadStatistics(Statistics):
         rows = rows.order_by(month_part, year_part).all()
 
         for row in rows:
-            stats.setdefault(row.__dict__[u'date'], default = {})
+            stats.setdefault(row.__dict__[u'date'], default={})
             key = u'collections' if row.__dict__[u'collection'] else u'research'
             stats[row.__dict__[u'date']][key] = {
                 u'records': int(row.__dict__[u'records']),
@@ -142,14 +140,15 @@ class DownloadStatistics(Statistics):
         return stats
 
     @staticmethod
-    def backfill_stats(filename, year = None, month = None):
-        '''
-        Loads static data from a json file that can be used to fill gaps in
+    def backfill_stats(filename, year=None, month=None):
+        '''Loads static data from a json file that can be used to fill gaps in
         the API's returned statistics.
+
         :param filename: the name of the json file containing the statistics
-        :param year: the year to load data for
-        :param month: the month to load data for
-        :return: a dictionary of download statistics keyed on month/year
+        :param year: the year to load data for (optional, default: None)
+        :param month: the month to load data for (optional, default: None)
+        :returns: a dictionary of download statistics keyed on month/year
+
         '''
         if filename is None:
             return {}
@@ -175,11 +174,12 @@ class DownloadStatistics(Statistics):
 
     @staticmethod
     def merge(stats_1, stats_2):
-        '''
-        Fills gaps in stats_1 with data from stats_2.
+        '''Fills gaps in stats_1 with data from stats_2.
+
         :param stats_1: the primary dataset (has priority)
         :param stats_2: the secondary dataset to merge into the first
-        :return: an ordered dictionary sorted by month/year
+        :returns: an ordered dictionary sorted by month/year
+
         '''
         all_keys = list(set(stats_1.keys() + stats_2.keys()))
         categories = list(set(
@@ -189,9 +189,9 @@ class DownloadStatistics(Statistics):
                                            stats_2.values()) for i in
                                [x for v in k.values() for x in v.keys()]]))
         ordered_stats = OrderedDict()
-        for key in sorted(all_keys, key = lambda x: dt.strptime(
+        for key in sorted(all_keys, key=lambda x: dt.strptime(
                 x if len(x) == 7 else u'0' + x, u'%m/%Y')):
             ordered_stats[key] = {
-            c: {s: stats_1.get(key, stats_2.get(key)).get(c, {}).get(s, 0) for
-                s in stat_names} for c in categories}
+                c: {s: stats_1.get(key, stats_2.get(key)).get(c, {}).get(s, 0) for
+                    s in stat_names} for c in categories}
         return ordered_stats
