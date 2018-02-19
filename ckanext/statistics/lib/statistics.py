@@ -25,7 +25,7 @@ class Statistics(object):
     def validate(self):
         ''' '''
         schema = self.context.get(u'schema', self.schema)
-        self.params, errors = toolkit.validate(self.params, schema, self.context)
+        self.params, errors = toolkit.navl_validate(self.params, schema, self.context)
         if errors:
             raise toolkit.ValidationError(errors)
 
