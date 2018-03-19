@@ -1,8 +1,10 @@
+
 #!/usr/bin/env python
 # encoding: utf-8
 #
 # This file is part of ckanext-statistics
 # Created by the Natural History Museum in London, UK
+
 
 import abc
 
@@ -10,8 +12,7 @@ from ckan.plugins import toolkit
 
 
 class Statistics(object):
-    '''Class used to implement the download statistics action
-    Show records downloaded etc.,
+    '''Base class for the download and dataset statistics actions.
 
     :param context: Ckan execution context
     :param params: Dictionary containing the action parameters
@@ -33,16 +34,16 @@ class Statistics(object):
     def schema(self):
         '''Schema to validate against
 
-        :returns: String
+        :returns: the schema as a dict
 
         '''
         return None
 
     @abc.abstractmethod
     def _get_statistics(self):
-        '''Get the statistics
+        '''Get the statistics.
 
-        :returns: dict
+        :returns: dict of the requested stats
 
         '''
         return None

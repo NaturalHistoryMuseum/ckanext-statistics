@@ -1,8 +1,10 @@
+
 #!/usr/bin/env python
 # encoding: utf-8
 #
 # This file is part of ckanext-statistics
 # Created by the Natural History Museum in London, UK
+
 
 from ckanext.statistics.lib.dataset_statistics import DatasetStatistics
 from ckanext.statistics.lib.download_statistics import DownloadStatistics
@@ -13,7 +15,7 @@ from ckan.plugins import toolkit
 @toolkit.side_effect_free
 @toolkit.auth_allow_anonymous_access
 def download_statistics(context, data_dict):
-    '''Data Portal Download stats
+    '''Data Portal download stats
 
     :param context:
     :param data_dict: 
@@ -27,7 +29,7 @@ def download_statistics(context, data_dict):
 @toolkit.side_effect_free
 @toolkit.auth_allow_anonymous_access
 def dataset_statistics(context, data_dict):
-    '''Data Portal Download stats
+    '''Data Portal dataset stats
 
     :param context:
     :param data_dict: 

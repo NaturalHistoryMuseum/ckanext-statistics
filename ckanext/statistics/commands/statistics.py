@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+# !/usr/bin/env python
 # encoding: utf-8
 #
 # This file is part of ckanext-statistics
@@ -28,7 +28,7 @@ class StatisticsCommand(toolkit.CkanCommand):
     usage = __doc__
 
     def command(self):
-        ''' '''
+        '''Run the command and retrieve the statistics.'''
         self._load_config()
         # Create the table if it doesn't exist
         self._create_table()
@@ -42,12 +42,11 @@ class StatisticsCommand(toolkit.CkanCommand):
 
     @staticmethod
     def _create_table():
-        ''' '''
         Base.metadata.create_all(model.meta.engine)
 
     @staticmethod
     def get_gbif_stats():
-        ''' '''
+        '''Get stats from GBIF's API.'''
         last_download = model.Session.query(GBIFDownload).order_by(
             GBIFDownload.date.desc()).first()
 

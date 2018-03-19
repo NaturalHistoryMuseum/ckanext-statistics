@@ -1,8 +1,10 @@
+
 #!/usr/bin/env python
 # encoding: utf-8
 #
 # This file is part of ckanext-statistics
 # Created by the Natural History Museum in London, UK
+
 
 import logging
 
@@ -21,9 +23,11 @@ class DatasetStatistics(Statistics):
     schema = statistics_dataset_schema()
 
     def _get_statistics(self, resource_id=None):
-        '''Fetch the statistics
+        '''Fetch the statistics.
 
-        :param resource_id:  (optional, default: None)
+        :param resource_id: a resource ID if the stats for only one resource is required
+                            - None retrieves stats for all resources
+                            (optional, default: None)
 
         '''
         context = {
@@ -31,15 +35,15 @@ class DatasetStatistics(Statistics):
             u'auth_user_obj': toolkit.c.userobj
             }
         if resource_id:
-            return self._get_resource_statistics(resource_id, context)
+            return self._get_resource_statistics(resource_id)
         else:
             return self._get_all_resources_statistics(context)
 
     @staticmethod
     def _get_all_resources_statistics(context):
-        '''
+        '''Get stats for all resources.
 
-        :param context: 
+        :param context: the current context
 
         '''
 
@@ -83,11 +87,10 @@ class DatasetStatistics(Statistics):
                         stats[u'total'] += search.get(u'total', 0)
         return stats
 
-    def _get_resource_statistics(self, resource_id, context):
+    def _get_resource_statistics(self, resource_id):
         '''Get stats for an individual resource
 
-        :param resource_id:
-        :param context: 
+        :param resource_id: the ID of the resource to retrieve stats for
 
         '''
         try:
@@ -96,8 +99,9 @@ class DatasetStatistics(Statistics):
                 })
         except toolkit.ObjectNotFound:
             toolkit.abort(404, toolkit._(u'Resource not found'))
-        except toolkit.ObjectNotAuthorized:
-            toolkit.abort(401, toolkit._(u'Unauthorized to read resource %s') % resource_id)
+        except toolkit.NotAuthorized:
+            toolkit.abort(401,
+                          toolkit._(u'Unauthorized to read resource %s') % resource_id)
         else:
 
             # TODO - Add break down over time for SOLR Datasets

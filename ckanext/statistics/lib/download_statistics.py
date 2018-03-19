@@ -1,8 +1,10 @@
+
 #!/usr/bin/env python
 # encoding: utf-8
 #
 # This file is part of ckanext-statistics
 # Created by the Natural History Museum in London, UK
+
 
 import json
 from collections import OrderedDict
@@ -20,9 +22,8 @@ from ckan.plugins import toolkit
 
 
 class DownloadStatistics(Statistics):
-    '''Class used to implement the download statistics action
-    Show records downloaded etc.,
-
+    '''Class used to implement the download statistics action.
+    Show records downloaded etc.
 
     '''
 
@@ -31,8 +32,9 @@ class DownloadStatistics(Statistics):
     def _get_statistics(self, year=None, month=None):
         '''Fetch the statistics
 
-        :param year:  (optional, default: None)
-        :param month:  (optional, default: None)
+        :param year: (optional, default: None)
+        :param month: (optional, default: None)
+        :returns: dict of stats
 
         '''
         stats = self.ckanpackager_stats(year, month)
@@ -49,8 +51,8 @@ class DownloadStatistics(Statistics):
         '''Get GBIF download stats
 
         :param year: (optional, default: None)
-        :param month:  (optional, default: None)
-        :returns: dict
+        :param month: (optional, default: None)
+        :returns: dict of GBIF stats
 
         '''
 
@@ -89,7 +91,8 @@ class DownloadStatistics(Statistics):
         '''Get ckan packager stats
 
         :param year: (optional, default: None)
-        :param month:  (optional, default: None)
+        :param month: (optional, default: None)
+        :returns: dict of ckanpackager stats
 
         '''
 
