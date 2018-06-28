@@ -16,6 +16,15 @@ int_validator = get_validator('int_validator')
 resource_id_exists = get_validator('resource_id_exists')
 
 
+def list_of_resource_ids(key, data, errors, context):
+    value = data.get(key)
+    if isinstance(value, basestring):
+        value = [value]
+
+    for resource_id in value:
+        resource_id_exists(resource_id, context)
+
+
 def statistics_downloads_schema():
     """
     Month and Year parameters
@@ -24,6 +33,7 @@ def statistics_downloads_schema():
     schema = {
         'month': [ignore_missing, int_validator],
         'year': [ignore_missing, int_validator],
+        'resource_id': [ignore_missing, list_of_resource_ids],
     }
     return schema
 
