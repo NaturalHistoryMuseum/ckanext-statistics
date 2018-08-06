@@ -28,22 +28,28 @@ class DownloadStatistics(Statistics):
 
     schema = statistics_downloads_schema()
 
-    def _get_statistics(self, year=None, month=None):
+    def _get_statistics(self, year=None, month=None, resource_id=None):
         '''Fetch the statistics
 
         :param year: (optional, default: None)
         :param month: (optional, default: None)
+        :param resource_id: (optional, default: None)
         :returns: dict of stats
 
         '''
-        stats = self.ckanpackager_stats(year, month)
-        backfill = self.backfill_stats(u'data-portal-backfill.json', year, month)
-        result = self.merge(stats, backfill)
-        # Merge in the GBIF stats
-        for k, v in self.gbif_stats(year, month).items():
-            result.setdefault(k, default={})
-            result[k][u'gbif'] = v
-        return result
+        stats = self.ckanpackager_stats(year, month, resource_id)
+        # if a resource_id has been specified, only return the ckanpackager
+        # stats sources as the other stats aren't filterable by resource ID
+        if resource_id:
+            return stats
+        else:
+            backfill = self.backfill_stats(u'data-portal-backfill.json', year, month)
+            result = self.merge(stats, backfill)
+            # Merge in the GBIF stats
+            for k, v in self.gbif_stats(year, month).items():
+                result.setdefault(k, default={})
+                result[k][u'gbif'] = v
+            return result
 
     @staticmethod
     def gbif_stats(year=None, month=None):
@@ -62,7 +68,7 @@ class DownloadStatistics(Statistics):
             u'month')
 
         rows = model.Session.query(
-            sql.func.concat(month_part, '/', year_part).label(u'date'),
+            sql.func.concat(month_part, u'/', year_part).label(u'date'),
             sql.func.sum(GBIFDownload.count).label(u'records'),
             sql.func.count().label(u'download_events')
             ).group_by(
@@ -86,13 +92,13 @@ class DownloadStatistics(Statistics):
         return stats
 
     @staticmethod
-    def ckanpackager_stats(year=None, month=None):
+    def ckanpackager_stats(year=None, month=None, resource_id=None):
         '''Get ckan packager stats
 
         :param year: (optional, default: None)
         :param month: (optional, default: None)
+        :param resource_id: (optional, default: None)
         :returns: dict of ckanpackager stats
-
         '''
 
         stats = OrderedDict()
@@ -106,7 +112,7 @@ class DownloadStatistics(Statistics):
                                         CKANPackagerStat.inserted_on).label(
             u'month')
         rows = model.Session.query(
-            sql.func.concat(month_part, '/', year_part).label(u'date'),
+            sql.func.concat(month_part, u'/', year_part).label(u'date'),
             sql.func.sum(CKANPackagerStat.count).label(u'records'),
             sql.func.count(u'id').label(u'download_events'),
             case(
@@ -129,6 +135,14 @@ class DownloadStatistics(Statistics):
         if month:
             rows = rows.filter(
                 sql.extract(u'month', CKANPackagerStat.inserted_on) == month)
+        if resource_id:
+            # if only one resource ID is provided then it'll be a string not a
+            # list. To avoid writing two filters, one using equality and one
+            # using an in clause, we'll just make a list with one element in it
+            # and then use in
+            if isinstance(resource_id, basestring):
+                resource_id = [resource_id]
+            rows = rows.filter(CKANPackagerStat.resource_id.in_(resource_id))
 
         rows = rows.order_by(month_part, year_part).all()
 
