@@ -1,10 +1,10 @@
-from solr import SolrException
 import ckan.logic as logic
 from ckan.common import c, _
 import ckan.model as model
 import logging
 import ckan.plugins as p
 import ckan.lib.base as base
+from ckan.lib.search import SearchIndexError
 
 from ckanext.statistics.lib.statistics import Statistics
 from ckanext.statistics.logic.schema import statistics_dataset_schema
@@ -64,7 +64,7 @@ class DatasetStatistics(Statistics):
                         }
                         try:
                             search = p.toolkit.get_action('datastore_search')({}, data)
-                        except (logic.NotFound, SolrException):
+                        except (logic.NotFound, SearchIndexError):
                             # Not every file is uploaded to the datastore, so ignore it
                             continue
 
