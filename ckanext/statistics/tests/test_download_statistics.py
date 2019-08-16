@@ -16,23 +16,19 @@ backfill_fn = u'data-portal-backfill.json'
 
 
 class TestBackfillStatistics(TestBase):
-    ''' '''
     plugins = [u'statistics']
 
     @staticmethod
     def _backfill_fn_exists():
-        ''' '''
         fp = os.path.join(os.path.dirname(os.path.dirname(__file__)), u'data',
                           backfill_fn)
         return os.path.exists(fp)
 
     def test_no_backfill_json_file(self):
-        ''' '''
         backfill_stats = DownloadStatistics.backfill_stats(None)
         nose.tools.assert_equal(backfill_stats, {})
 
     def test_not_empty_if_file_given(self):
-        ''' '''
         backfill_stats = DownloadStatistics.backfill_stats(
             backfill_fn) if self._backfill_fn_exists() else {}
         assert self._backfill_fn_exists(), u'{0} does not exist'.format(
@@ -41,7 +37,6 @@ class TestBackfillStatistics(TestBase):
         assert len(backfill_stats) > 0, u'is empty'
 
     def test_filter_by_year(self):
-        ''' '''
         backfill_stats = {}
         yr = 2018
         while len(backfill_stats.keys()) == 0 and yr > 2013:
@@ -53,7 +48,6 @@ class TestBackfillStatistics(TestBase):
             [k.endswith('/{0}'.format(yr)) for k in backfill_stats.keys()])
 
     def test_filter_by_month(self):
-        ''' '''
         backfill_stats = {}
         mnth = 0
         while len(backfill_stats.keys()) == 0 and mnth < 12:
@@ -66,7 +60,6 @@ class TestBackfillStatistics(TestBase):
 
 
 class TestMerge(TestBase):
-    ''' '''
     plugins = [u'statistics']
 
     @classmethod
@@ -77,14 +70,12 @@ class TestMerge(TestBase):
         cls.merged_stats = DownloadStatistics.merge(cls.ckan_stats, cls.backfill_stats)
 
     def test_ordereddict_output(self):
-        ''' '''
         assert isinstance(self.merged_stats,
                           OrderedDict), u'merge result is {0}, ' \
                                         u'not OrderedDict'.format(
             type(self.merged_stats))
 
     def test_all_keys_present(self):
-        ''' '''
         bf_keys_in_merge = [(k in self.merged_stats.keys()) for k in
                             self.backfill_stats.keys()]
         ck_keys_in_merge = [(k in self.merged_stats.keys()) for k in
