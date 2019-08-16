@@ -10,17 +10,14 @@ from collections import OrderedDict
 import nose
 import os
 from ckanext.statistics.lib.download_statistics import DownloadStatistics
-
-from ckan.tests import helpers
-
-eq_ = nose.tools.eq_
+from ckantest.models import TestBase
 
 backfill_fn = u'data-portal-backfill.json'
 
 
-class TestBackfillStatistics(helpers.FunctionalTestBase):
+class TestBackfillStatistics(TestBase):
     ''' '''
-    _load_plugins = (u'statistics',)
+    plugins = [u'statistics']
 
     @staticmethod
     def _backfill_fn_exists():
@@ -32,7 +29,7 @@ class TestBackfillStatistics(helpers.FunctionalTestBase):
     def test_no_backfill_json_file(self):
         ''' '''
         backfill_stats = DownloadStatistics.backfill_stats(None)
-        eq_(backfill_stats, {})
+        nose.tools.assert_equal(backfill_stats, {})
 
     def test_not_empty_if_file_given(self):
         ''' '''
@@ -68,12 +65,16 @@ class TestBackfillStatistics(helpers.FunctionalTestBase):
             [k.startswith(u'{0}/'.format(mnth)) for k in backfill_stats.keys()])
 
 
-class TestMerge(helpers.FunctionalTestBase):
+class TestMerge(TestBase):
     ''' '''
-    _load_plugins = (u'statistics',)
-    ckan_stats = DownloadStatistics.ckanpackager_stats()
-    backfill_stats = DownloadStatistics.backfill_stats(backfill_fn)
-    merged_stats = DownloadStatistics.merge(ckan_stats, backfill_stats)
+    plugins = [u'statistics']
+
+    @classmethod
+    def setup_class(cls):
+        super(TestMerge, cls).setup_class()
+        cls.ckan_stats = DownloadStatistics.ckanpackager_stats()
+        cls.backfill_stats = DownloadStatistics.backfill_stats(backfill_fn)
+        cls.merged_stats = DownloadStatistics.merge(cls.ckan_stats, cls.backfill_stats)
 
     def test_ordereddict_output(self):
         ''' '''
