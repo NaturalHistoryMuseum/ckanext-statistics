@@ -9,7 +9,7 @@ import logging
 
 from ckanext.statistics.lib.statistics import Statistics
 from ckanext.statistics.logic.schema import statistics_dataset_schema
-from solr import SolrException
+from pysolr import SolrError
 
 from ckan.plugins import toolkit
 
@@ -70,7 +70,7 @@ class DatasetStatistics(Statistics):
                             }
                         try:
                             search = toolkit.get_action(u'datastore_search')({}, data)
-                        except (toolkit.ObjectNotFound, SolrException):
+                        except (toolkit.ObjectNotFound, SolrError):
                             # Not every file is uploaded to the datastore, so ignore it
                             continue
 
