@@ -11,6 +11,7 @@ import nose
 import os
 from ckanext.statistics.lib.download_statistics import DownloadStatistics
 from ckantest.models import TestBase
+from ckantest.factories.data import DataConstants
 
 backfill_fn = u'data-portal-backfill.json'
 
@@ -57,6 +58,29 @@ class TestBackfillStatistics(TestBase):
         assert len(backfill_stats.keys()) > 0, u'no results'
         assert all(
             [k.startswith(u'{0}/'.format(mnth)) for k in backfill_stats.keys()])
+
+
+class TestCkanPackagerStats(TestBase):
+    plugins = [u'statistics', u'datastore']
+
+    @classmethod
+    def setup_class(cls):
+        super(TestCkanPackagerStats, cls).setup_class()
+        pkg_dict = cls.data_factory().package()
+        cls._pkg_name = pkg_dict[u'name']
+        res_dict_1 = cls.data_factory().resource(package_id=pkg_dict[u'id'], records=DataConstants.records)
+        res_dict_2 = cls.data_factory().resource(package_id=pkg_dict[u'id'], records=DataConstants.records)
+        cls._res_ids = [res_dict_1[u'id'], res_dict_2[u'id']]
+
+    def test_no_resource_ids(self):
+        self.config.remove(u'ckanext.statistics.resource_ids')
+        ckan_stats = DownloadStatistics.ckanpackager_stats()
+        nose.tools.assert_equal(len(ckan_stats), 0)
+
+    def test_with_resource_ids(self):
+        self.config.update({u'ckanext.statistics.resource_ids': self._res_ids[0]})
+        ckan_stats = DownloadStatistics.ckanpackager_stats()
+        nose.tools.assert_equal(len(ckan_stats), 0)
 
 
 class TestMerge(TestBase):

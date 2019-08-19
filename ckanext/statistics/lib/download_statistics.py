@@ -7,13 +7,13 @@
 
 import json
 from collections import OrderedDict
-from datetime import datetime as dt
 
 import os
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
 from ckanext.statistics.lib.statistics import Statistics
 from ckanext.statistics.logic.schema import statistics_downloads_schema
 from ckanext.statistics.model.gbif_download import GBIFDownload
+from datetime import datetime as dt
 from sqlalchemy import case, sql
 
 import ckan.model as model
@@ -102,8 +102,9 @@ class DownloadStatistics(Statistics):
         '''
 
         stats = OrderedDict()
-        indexlot_resource_id = toolkit.config.get(u'ckanext.nhm.indexlot_resource_id')
-        specimen_resource_id = toolkit.config.get(u'ckanext.nhm.specimen_resource_id')
+        resource_ids = toolkit.config.get(u'ckanext.statistics.resource_ids')
+        if resource_ids is not None:
+            resource_ids = resource_ids.split(u' ')
 
         year_part = sql.func.date_part(u'year',
                                        CKANPackagerStat.inserted_on).label(
@@ -111,20 +112,20 @@ class DownloadStatistics(Statistics):
         month_part = sql.func.date_part(u'month',
                                         CKANPackagerStat.inserted_on).label(
             u'month')
-        rows = model.Session.query(
-            sql.func.concat(month_part, u'/', year_part).label(u'date'),
-            sql.func.sum(CKANPackagerStat.count).label(u'records'),
-            sql.func.count(u'id').label(u'download_events'),
-            case(
-                {
-                    specimen_resource_id: True,
-                    indexlot_resource_id: True
-                    },
-                value=CKANPackagerStat.resource_id,
-                else_=False
-                ).label(u'collection')
 
-            ).group_by(
+        query_parts = [sql.func.concat(month_part, u'/', year_part).label(u'date'),
+                       sql.func.sum(CKANPackagerStat.count).label(u'records'),
+                       sql.func.count(u'id').label(u'download_events'),
+                       case(
+                           {r_id: True for r_id in resource_ids},
+                           value=CKANPackagerStat.resource_id,
+                           else_=False
+                           ).label(
+                           u'collection') if resource_ids is not None else
+                       CKANPackagerStat.resource_id.label(
+                           u'collection')
+                       ]
+        rows = model.Session.query(*query_parts).group_by(
             year_part,
             month_part,
             u'collection'
@@ -206,7 +207,7 @@ class DownloadStatistics(Statistics):
                                [x for v in k.values() for x in v.keys()]]))
         ordered_stats = OrderedDict()
         for key in sorted(all_keys, key=lambda x: dt.strptime(
-                x if len(x) == 7 else u'0' + x, u'%m/%Y')):
+            x if len(x) == 7 else u'0' + x, u'%m/%Y')):
             ordered_stats[key] = {
                 c: {s: stats_1.get(key, stats_2.get(key)).get(c, {}).get(s, 0) for
                     s in stat_names} for c in categories}
