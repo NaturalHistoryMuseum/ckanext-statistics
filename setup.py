@@ -33,6 +33,7 @@ setup(
     install_requires=[
         'requests',
         'pysolr==3.6.0',
+        'ckanext-ckanpackager'
         ],
     dependency_links=[
         'git+https://github.com/NaturalHistoryMuseum/ckanext-ckanpackager.git#egg=ckanext-ckanpackager'
