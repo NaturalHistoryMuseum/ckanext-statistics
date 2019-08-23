@@ -30,7 +30,13 @@ setup(
     namespace_packages=[u'ckanext', u'ckanext.statistics'],
     include_package_data=True,
     zip_safe=False,
-    install_requires=[],
+    install_requires=[
+        'requests==2.18.4',
+        'pysolr==3.6.0',
+        ],
+    dependency_links=[
+        'git+https://github.com/NaturalHistoryMuseum/ckanext-ckanpackager.git#egg=ckanext-ckanpackager'
+        ],
     entry_points= \
         u'''
         [ckan.plugins]
