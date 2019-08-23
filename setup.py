@@ -31,7 +31,7 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'requests==2.18.4',
+        'requests',
         'pysolr==3.6.0',
         ],
     dependency_links=[
