@@ -11,6 +11,9 @@ __version__ = u'1.0.0-alpha'
 with open(u'README.md', u'r') as f:
     __long_description__ = f.read()
 
+dependencies = {u'ckanext-ckanpackager':
+                    'git+https://github.com/NaturalHistoryMuseum/ckanext-ckanpackager.git#egg=ckanext-ckanpackager'}
+
 setup(
     name=u'ckanext-statistics',
     version=__version__,
@@ -32,12 +35,9 @@ setup(
     zip_safe=False,
     install_requires=[
         'requests',
-        'pysolr==3.6.0',
-        'ckanext-ckanpackager'
-        ],
-    dependency_links=[
-        'git+https://github.com/NaturalHistoryMuseum/ckanext-ckanpackager.git#egg=ckanext-ckanpackager'
-        ],
+        'pysolr==3.6.0'
+        ] + [u'{0} @ {1}'.format(k, v) for k, v in dependencies.items()],
+    dependency_links=dependencies.values(),
     entry_points= \
         u'''
         [ckan.plugins]
