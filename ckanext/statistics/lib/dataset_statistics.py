@@ -40,51 +40,49 @@ class DatasetStatistics(Statistics):
 
     @staticmethod
     def _get_all_resources_statistics(context):
-        '''Get stats for all resources.
+        '''
+        Get stats for all resources.
 
         :param context: the current context
-
         '''
+        total = 0
+        resources = []
+        package_data_dict = {u'limit': 50, u'offset': 0}
 
-        stats = {
-            u'total': 0,
-            u'resources': []
-            }
+        while True:
+            packages = toolkit.get_action(u'current_package_list_with_resources')(context,
+                                                                                  package_data_dict)
+            if not packages:
+                # we've hit all the packages that are available
+                break
+            else:
+                package_data_dict[u'offset'] += len(packages)
 
-        pkgs = toolkit.get_action(u'current_package_list_with_resources')(context, {
-            u'limit': 200
-            })
-        for pkg_dict in pkgs:
-            if pkg_dict[u'private'] or pkg_dict[u'state'] != u'active':
-                continue
-
-            if u'resources' in pkg_dict:
-                for resource in pkg_dict[u'resources']:
-                    if resource[u'state'] != u'active':
+                for package in packages:
+                    # only include resources from packages that are public and active
+                    if package[u'private'] or package[u'state'] != u'active':
                         continue
-                    # Does this have an activate datastore table?
-                    if resource[u'url_type'] in [u'datastore', u'upload', u'dataset']:
-                        data = {
-                            u'resource_id': resource[u'id'],
-                            u'limit': 1
-                            }
-                        try:
-                            search = toolkit.get_action('datastore_search')({}, data)
-                        except (toolkit.ObjectNotFound, SearchIndexError):
-                            # Not every file is uploaded to the datastore, so ignore it
+                    for resource in package.get(u'resources', []):
+                        if resource[u'state'] != u'active':
                             continue
+                        if resource.get(u'datastore_active', False):
+                            try:
+                                search = toolkit.get_action(u'datastore_search')(
+                                    {}, {u'resource_id': resource[u'id'], u'limit': 0})
+                            except (toolkit.ObjectNotFound, SearchIndexError):
+                                # not every file is ingested into the datastore, ignore these errors
+                                continue
 
-                        stats[u'resources'].append(
-                            {
-                                u'pkg_name': pkg_dict[u'name'],
-                                u'pkg_title': pkg_dict[u'title'],
+                            resources.append({
+                                u'pkg_name': package[u'name'],
+                                u'pkg_title': package[u'title'],
                                 u'name': resource[u'name'],
                                 u'id': resource[u'id'],
                                 u'total': search.get(u'total', 0)
-                                }
-                            )
-                        stats[u'total'] += search.get(u'total', 0)
-        return stats
+                            })
+                            total += search.get(u'total', 0)
+
+        return {u'total': total, u'resources': resources}
 
     def _get_resource_statistics(self, resource_id):
         '''Get stats for an individual resource
