@@ -1,19 +1,25 @@
-from logging import getLogger
-import ckan.plugins as p
-from ckanext.statistics.logic.action import download_statistics, dataset_statistics
+# !/usr/bin/env python
+# encoding: utf-8
+#
+# This file is part of ckanext-statistics
+# Created by the Natural History Museum in London, UK
 
 
-class StatisticsPlugin(p.SingletonPlugin):
-    """
-    NHM Statistics
-    """
+from ckanext.statistics.logic.action import dataset_statistics, download_statistics
 
-    p.implements(p.IActions)
+from ckan.plugins import SingletonPlugin, implements, interfaces
+
+
+class StatisticsPlugin(SingletonPlugin):
+    '''NHM Statistics'''
+
+    implements(interfaces.IActions)
 
     # IActions
     @staticmethod
     def get_actions():
+        ''' '''
         return {
-            'download_statistics': download_statistics,
-            'dataset_statistics': dataset_statistics
-        }
+            u'download_statistics': download_statistics,
+            u'dataset_statistics': dataset_statistics
+            }

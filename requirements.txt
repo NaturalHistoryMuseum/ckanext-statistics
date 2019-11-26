@@ -1,1 +1,5 @@
-requests==2.10.0
+# install from setup.py
+.
+
+# dev overrides/additional libraries
+-e git+https://github.com/NaturalHistoryMuseum/ckanext-ckanpackager.git@ckan-upgrade-2.8.0a#egg=ckanext-ckanpackager
