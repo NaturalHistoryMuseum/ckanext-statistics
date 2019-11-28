@@ -84,10 +84,10 @@ class DownloadStatistics(Statistics):
         rows = rows.order_by(month_part, year_part).all()
 
         for row in rows:
-            stats[row.__dict__[u'date']] = {
-                u'records': int(row.__dict__[u'records']),
-                u'download_events': int(row.__dict__[u'download_events'])
-                }
+            stats[row.date] = {
+                u'records': int(row.records),
+                u'download_events': int(row.download_events)
+            }
 
         return stats
 
@@ -148,12 +148,12 @@ class DownloadStatistics(Statistics):
         rows = rows.order_by(month_part, year_part).all()
 
         for row in rows:
-            stats.setdefault(row.__dict__[u'date'], default={})
-            key = u'collections' if row.__dict__[u'collection'] else u'research'
-            stats[row.__dict__[u'date']][key] = {
-                u'records': int(row.__dict__[u'records']),
-                u'download_events': int(row.__dict__[u'download_events'])
-                }
+            key = u'collections' if row.collection else u'research'
+            entry = stats.setdefault(row.date, default={})
+            entry[key] = {
+                u'records': int(row.records),
+                u'download_events': int(row.download_events)
+            }
         return stats
 
     @staticmethod
