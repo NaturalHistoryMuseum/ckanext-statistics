@@ -85,8 +85,9 @@ class DownloadStatistics(Statistics):
 
         for row in rows:
             stats[row.date] = {
-                u'records': int(row.records),
-                u'download_events': int(row.download_events)
+                u'records': int(row.records if row.records is not None else 0),
+                u'download_events':
+                    int(row.download_events if row.download_events is not None else 0)
             }
 
         return stats
@@ -151,8 +152,9 @@ class DownloadStatistics(Statistics):
             key = u'collections' if row.collection else u'research'
             entry = stats.setdefault(row.date, default={})
             entry[key] = {
-                u'records': int(row.records),
-                u'download_events': int(row.download_events)
+                u'records': int(row.records if row.records is not None else 0),
+                u'download_events':
+                    int(row.download_events if row.download_events is not None else 0)
             }
         return stats
 
