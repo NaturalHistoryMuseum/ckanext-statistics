@@ -11,8 +11,10 @@ __version__ = u'1.0.0-alpha'
 with open(u'README.md', u'r') as f:
     __long_description__ = f.read()
 
-dependencies = {u'ckanext-ckanpackager':
-                    'git+https://github.com/NaturalHistoryMuseum/ckanext-ckanpackager.git#egg=ckanext-ckanpackager'}
+dependencies = {
+    u'ckanext-ckanpackager': u'git+https://github.com/NaturalHistoryMuseum/ckanext-ckanpackager.git#egg=ckanext-ckanpackager',
+    u'ckanext-versioned-datastore': u'git+https://github.com/NaturalHistoryMuseum/ckanext-versioned-datastore.git#egg=ckanext-versioned-datastore',
+}
 
 setup(
     name=u'ckanext-statistics',

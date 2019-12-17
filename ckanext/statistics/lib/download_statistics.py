@@ -7,17 +7,106 @@
 
 import json
 from collections import OrderedDict
+from datetime import datetime as dt
 
+import ckan.model as model
 import os
+from ckan.plugins import toolkit
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
 from ckanext.statistics.lib.statistics import Statistics
 from ckanext.statistics.logic.schema import statistics_downloads_schema
 from ckanext.statistics.model.gbif_download import GBIFDownload
-from datetime import datetime as dt
-from sqlalchemy import case, sql, literal
+from ckanext.versioned_datastore.model.downloads import DatastoreDownload, state_complete
+from sqlalchemy import sql
 
-import ckan.model as model
-from ckan.plugins import toolkit
+
+class MonthlyStats(object):
+    '''
+    Class used to keep track of the monthly download counts from multiple sources.
+    '''
+
+    def __init__(self, month=None, year=None, resource_id=None):
+        '''
+        :param month: if passed, only this month will be counted (defaults to None)
+        :param year: if passed, only this year will be counted (defaults to None)
+        :param resource_id: if passed, only this resource will be counted (defaults to None)
+        '''
+        self.month = int(month) if month is not None else None
+        self.year = int(year) if year is not None else None
+        self.resource_id = resource_id
+
+        self.stats = {}
+        # extract the collection resource ids from the config
+        self.resource_ids = toolkit.config.get(u'ckanext.statistics.resource_ids', set())
+        if self.resource_ids:
+            self.resource_ids = set(self.resource_ids.split(u' '))
+
+    def add(self, date, resource_id, count):
+        '''
+        Updates the stats with the download event information for the given resource and count at
+        the given date.
+
+        :param date: the date of the download event
+        :param resource_id: the resource downloaded
+        :param count: the number of records downloaded
+        '''
+        self.add_all(date, {resource_id: count})
+
+    def add_all(self, date, resource_counts):
+        '''
+        Updates the stats with the download event information for the given resources and counts at
+        the given date. This function filters out information about months/years/resources we're
+        not interested in based on the parameters passed during the construction of this object.
+
+        :param date: the date of the download event
+        :param resource_counts: a dict of resource ids -> counts
+        '''
+        month_year = date.strftime(u'%-m/%Y')
+        month, year = map(int, month_year.split(u'/'))
+
+        # filter the download event
+        if self.resource_id is not None:
+            if self.resource_id in resource_counts:
+                # only update with counts for the resource id requested
+                resource_counts = {self.resource_id: resource_counts[self.resource_id]}
+            else:
+                return
+        if self.month is not None and self.month != month:
+            return
+        if self.year is not None and self.year != year:
+            return
+
+        for resource_id, count in resource_counts.items():
+            # if the month/year combo hasn't been seen yet, default it
+            if month_year not in self.stats:
+                self.stats[month_year] = {
+                    u'collections': {
+                        u'records': 0,
+                        u'download_events': 0
+                    },
+                    u'research': {
+                        u'records': 0,
+                        u'download_events': 0
+                    }
+                }
+            resource_type = u'collections' if resource_id in self.resource_ids else u'research'
+            self.stats[month_year][resource_type][u'records'] += count
+
+        resources = set(resource_counts.keys())
+        if self.resource_ids.intersection(resources):
+            self.stats[month_year][u'collections'][u'download_events'] += 1
+
+        if resources.difference(self.resource_ids):
+            self.stats[month_year][u'research'][u'download_events'] += 1
+
+    def as_dict(self):
+        '''
+        Return an OrderedDict of count stats in ascending chronological order.
+
+        :return: an OrderedDict
+        '''
+        return OrderedDict(sorted(self.stats.items(),
+                                  key=lambda x: tuple(map(int, reversed(x[0].split(u'/'))))))
 
 
 class DownloadStatistics(Statistics):
@@ -36,8 +125,12 @@ class DownloadStatistics(Statistics):
         :param resource_id: (optional, default: None)
         :returns: dict of stats
         '''
-        stats = self.ckanpackager_stats(year, month, resource_id)
-        # if a resource_id has been specified, only return the ckanpackager stats sources as the
+        monthly_stats = MonthlyStats(month, year, resource_id)
+        self.add_ckanpackager_stats(monthly_stats)
+        self.add_versioned_datastore_download_stats(monthly_stats)
+        stats = monthly_stats.as_dict()
+
+        # if a resource_id has been specified, only return the ckanpackager/vdd stats sources as the
         # other stats aren't filterable by resource ID
         if resource_id:
             return stats
@@ -87,57 +180,39 @@ class DownloadStatistics(Statistics):
         return stats
 
     @staticmethod
-    def ckanpackager_stats(year=None, month=None, resource_id=None):
+    def add_ckanpackager_stats(monthly_stats):
         '''
-        Get ckan packager stats.
+        Updates the given MonthlyStats object with the ckan packager download stats.
 
-        :param year: (optional, default: None)
-        :param month: (optional, default: None)
-        :param resource_id: (optional, default: None)
-        :returns: dict of ckanpackager stats
+        Note: this function used to aggregate the statistics in the database using sql, however this
+        changed when the versioned datastore download stats were added and now it's all done in
+        Python. This is because the versioned datastore download stats are more complicated to parse
+        and aggregate as the record counts are stored in a JSONB column using the resource ids as
+        keys and the counts as values. Creating an SQL query to aggregate this would probably have
+        been possible but it would have been horrible to maintain and therefore handling it in
+        python made more sense. To then avoid having two completely different aggregation mechanisms
+        in the same area I decided to switch the ckan packager stats aggregation over to python too.
+
+        :param monthly_stats: a MonthlyStats object
         '''
-        stats = OrderedDict()
-        resource_ids = toolkit.config.get(u'ckanext.statistics.resource_ids')
-        if resource_ids is not None:
-            resource_ids = resource_ids.split(u' ')
+        for row in model.Session.query(CKANPackagerStat):
+            count = int(row.count) if row.count is not None else 0
+            monthly_stats.add(row.inserted_on, row.resource_id, count)
 
-        year_part = sql.func.date_part(u'year', CKANPackagerStat.inserted_on).label(u'year')
-        month_part = sql.func.date_part(u'month', CKANPackagerStat.inserted_on).label(u'month')
+    @staticmethod
+    def add_versioned_datastore_download_stats(monthly_stats):
+        '''
+        Updates the given MonthlyStats object with the versioned datastore download stats. Only
+        "complete" downloads are counted. Note that downloads that error out don't get the state of
+        "complete", they get "failed", however to avoid creating a subtle dependency on versioned
+        datastore logic in a completely different extension we check the error column is empty too.
 
-        # create a query, selecting the date, record total and number of download events
-        query = model.Session.query(
-            sql.func.concat(month_part, u'/', year_part).label(u'date'),
-            sql.func.sum(CKANPackagerStat.count).label(u'records'),
-            sql.func.count(u'id').label(u'download_events'),
-        )
-        # add a column which tells us whether the resource is a collections resource or not
-        if resource_ids is not None:
-            query = query.add_columns(case(
-                whens={r_id: True for r_id in resource_ids},
-                value=CKANPackagerStat.resource_id,
-                else_=False
-            ).label(u'collection'))
-        else:
-            # if we don't have a list of collection resource ids then default to False
-            query = query.add_columns(literal(False).label(u'collection'))
-
-        if year:
-            query = query.filter(sql.extract(u'year', CKANPackagerStat.inserted_on) == year)
-        if month:
-            query = query.filter(sql.extract(u'month', CKANPackagerStat.inserted_on) == month)
-        if resource_id:
-            query = query.filter(CKANPackagerStat.resource_id.in_(resource_id))
-        query = query.group_by(year_part, month_part, u'collection').order_by(month_part, year_part)
-
-        for row in query:
-            key = u'collections' if row.collection else u'research'
-            entry = stats.setdefault(row.date, default={})
-            entry[key] = {
-                u'records': int(row.records if row.records is not None else 0),
-                u'download_events':
-                    int(row.download_events if row.download_events is not None else 0)
-            }
-        return stats
+        :param monthly_stats: a MonthlyStats object
+        '''
+        for download in model.Session.query(DatastoreDownload)\
+                .filter(DatastoreDownload.state == state_complete) \
+                .filter(DatastoreDownload.error.is_(None)):
+            monthly_stats.add_all(download.created, download.resource_totals)
 
     @staticmethod
     def backfill_stats(filename, year=None, month=None):
