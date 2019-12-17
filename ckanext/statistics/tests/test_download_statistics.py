@@ -17,7 +17,7 @@ backfill_fn = u'data-portal-backfill.json'
 
 
 class TestBackfillStatistics(TestBase):
-    plugins = [u'statistics']
+    plugins = [u'statistics', u'versioned_datastore']
 
     @staticmethod
     def _backfill_fn_exists():
@@ -61,7 +61,7 @@ class TestBackfillStatistics(TestBase):
 
 
 class TestCkanPackagerStats(TestBase):
-    plugins = [u'statistics', u'datastore']
+    plugins = [u'statistics', u'datastore', u'versioned_datastore']
 
     @classmethod
     def setup_class(cls):
@@ -84,7 +84,7 @@ class TestCkanPackagerStats(TestBase):
 
 
 class TestMerge(TestBase):
-    plugins = [u'statistics']
+    plugins = [u'statistics', u'versioned_datastore']
 
     @classmethod
     def setup_class(cls):
