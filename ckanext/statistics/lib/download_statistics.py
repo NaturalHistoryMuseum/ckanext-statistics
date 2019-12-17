@@ -7,16 +7,17 @@
 
 import json
 from collections import OrderedDict
-from datetime import datetime as dt
 
-import ckan.model as model
 import os
-from ckan.plugins import toolkit
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
 from ckanext.statistics.lib.statistics import Statistics
 from ckanext.statistics.logic.schema import statistics_downloads_schema
 from ckanext.statistics.model.gbif_download import GBIFDownload
-from sqlalchemy import case, sql
+from datetime import datetime as dt
+from sqlalchemy import case, sql, literal
+
+import ckan.model as model
+from ckan.plugins import toolkit
 
 
 class DownloadStatistics(Statistics):
@@ -115,7 +116,7 @@ class DownloadStatistics(Statistics):
                 else_=False
             ).label(u'collection'))
         else:
-            query_parts.append(CKANPackagerStat.resource_id.label(u'collection'))
+            query_parts.append(literal(False).label(u'collection'))
 
         query = model.Session.query(*query_parts).group_by(year_part, month_part, u'collection')
 
