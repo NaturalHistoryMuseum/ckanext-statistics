@@ -104,21 +104,22 @@ class DownloadStatistics(Statistics):
         year_part = sql.func.date_part(u'year', CKANPackagerStat.inserted_on).label(u'year')
         month_part = sql.func.date_part(u'month', CKANPackagerStat.inserted_on).label(u'month')
 
-        query_parts = [
+        # create a query, selecting the date, record total and number of download events
+        query = model.Session.query(
             sql.func.concat(month_part, u'/', year_part).label(u'date'),
             sql.func.sum(CKANPackagerStat.count).label(u'records'),
             sql.func.count(u'id').label(u'download_events'),
-        ]
+        )
+        # add a column which tells us whether the resource is a collections resource or not
         if resource_ids is not None:
-            query_parts.append(case(
+            query = query.add_columns(case(
                 whens={r_id: True for r_id in resource_ids},
                 value=CKANPackagerStat.resource_id,
                 else_=False
             ).label(u'collection'))
         else:
-            query_parts.append(literal(False).label(u'collection'))
-
-        query = model.Session.query(*query_parts).group_by(year_part, month_part, u'collection')
+            # if we don't have a list of collection resource ids then default to False
+            query = query.add_columns(literal(False).label(u'collection'))
 
         if year:
             query = query.filter(sql.extract(u'year', CKANPackagerStat.inserted_on) == year)
@@ -126,7 +127,7 @@ class DownloadStatistics(Statistics):
             query = query.filter(sql.extract(u'month', CKANPackagerStat.inserted_on) == month)
         if resource_id:
             query = query.filter(CKANPackagerStat.resource_id.in_(resource_id))
-        query = query.order_by(month_part, year_part).all()
+        query = query.group_by(year_part, month_part, u'collection').order_by(month_part, year_part)
 
         for row in query:
             key = u'collections' if row.collection else u'research'
