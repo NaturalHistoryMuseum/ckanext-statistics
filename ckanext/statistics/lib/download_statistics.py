@@ -7,39 +7,37 @@
 
 import json
 from collections import OrderedDict
+from datetime import datetime as dt
 
+import ckan.model as model
 import os
+from ckan.plugins import toolkit
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
 from ckanext.statistics.lib.statistics import Statistics
 from ckanext.statistics.logic.schema import statistics_downloads_schema
 from ckanext.statistics.model.gbif_download import GBIFDownload
-from datetime import datetime as dt
 from sqlalchemy import case, sql
-
-import ckan.model as model
-from ckan.plugins import toolkit
 
 
 class DownloadStatistics(Statistics):
-    '''Class used to implement the download statistics action.
-    Show records downloaded etc.
-
+    '''
+    Class used to implement the download statistics action.
     '''
 
     schema = statistics_downloads_schema()
 
     def _get_statistics(self, year=None, month=None, resource_id=None):
-        '''Fetch the statistics
+        '''
+        Fetch the statistics.
 
         :param year: (optional, default: None)
         :param month: (optional, default: None)
         :param resource_id: (optional, default: None)
         :returns: dict of stats
-
         '''
         stats = self.ckanpackager_stats(year, month, resource_id)
-        # if a resource_id has been specified, only return the ckanpackager
-        # stats sources as the other stats aren't filterable by resource ID
+        # if a resource_id has been specified, only return the ckanpackager stats sources as the
+        # other stats aren't filterable by resource ID
         if resource_id:
             return stats
         else:
@@ -53,33 +51,28 @@ class DownloadStatistics(Statistics):
 
     @staticmethod
     def gbif_stats(year=None, month=None):
-        '''Get GBIF download stats
+        '''
+        Get GBIF download stats
 
         :param year: (optional, default: None)
         :param month: (optional, default: None)
         :returns: dict of GBIF stats
-
         '''
-
         stats = OrderedDict()
 
         year_part = sql.func.date_part(u'year', GBIFDownload.date).label(u'year')
-        month_part = sql.func.date_part(u'month', GBIFDownload.date).label(
-            u'month')
+        month_part = sql.func.date_part(u'month', GBIFDownload.date).label(u'month')
 
         rows = model.Session.query(
             sql.func.concat(month_part, u'/', year_part).label(u'date'),
             sql.func.sum(GBIFDownload.count).label(u'records'),
             sql.func.count().label(u'download_events')
-            ).group_by(
-            year_part,
-            month_part
-            )
+        ).group_by(year_part, month_part)
+
         if year:
             rows = rows.filter(sql.extract(u'year', GBIFDownload.date) == year)
         if month:
-            rows = rows.filter(
-                sql.extract(u'month', GBIFDownload.date) == month)
+            rows = rows.filter(sql.extract(u'month', GBIFDownload.date) == month)
 
         rows = rows.order_by(month_part, year_part).all()
 
@@ -94,61 +87,47 @@ class DownloadStatistics(Statistics):
 
     @staticmethod
     def ckanpackager_stats(year=None, month=None, resource_id=None):
-        '''Get ckan packager stats
+        '''
+        Get ckan packager stats.
 
         :param year: (optional, default: None)
         :param month: (optional, default: None)
         :param resource_id: (optional, default: None)
         :returns: dict of ckanpackager stats
         '''
-
         stats = OrderedDict()
         resource_ids = toolkit.config.get(u'ckanext.statistics.resource_ids')
         if resource_ids is not None:
             resource_ids = resource_ids.split(u' ')
 
-        year_part = sql.func.date_part(u'year',
-                                       CKANPackagerStat.inserted_on).label(
-            u'year')
-        month_part = sql.func.date_part(u'month',
-                                        CKANPackagerStat.inserted_on).label(
-            u'month')
+        year_part = sql.func.date_part(u'year', CKANPackagerStat.inserted_on).label(u'year')
+        month_part = sql.func.date_part(u'month', CKANPackagerStat.inserted_on).label(u'month')
 
-        query_parts = [sql.func.concat(month_part, u'/', year_part).label(u'date'),
-                       sql.func.sum(CKANPackagerStat.count).label(u'records'),
-                       sql.func.count(u'id').label(u'download_events'),
-                       case(
-                           {r_id: True for r_id in resource_ids},
-                           value=CKANPackagerStat.resource_id,
-                           else_=False
-                           ).label(
-                           u'collection') if resource_ids is not None else
-                       CKANPackagerStat.resource_id.label(
-                           u'collection')
-                       ]
-        rows = model.Session.query(*query_parts).group_by(
-            year_part,
-            month_part,
-            u'collection'
-            )
+        query_parts = [
+            sql.func.concat(month_part, u'/', year_part).label(u'date'),
+            sql.func.sum(CKANPackagerStat.count).label(u'records'),
+            sql.func.count(u'id').label(u'download_events'),
+        ]
+        if resource_ids is not None:
+            query_parts.append(case(
+                whens={r_id: True for r_id in resource_ids},
+                value=CKANPackagerStat.resource_id,
+                else_=False
+            ).label(u'collection'))
+        else:
+            query_parts.append(CKANPackagerStat.resource_id.label(u'collection'))
+
+        query = model.Session.query(*query_parts).group_by(year_part, month_part, u'collection')
+
         if year:
-            rows = rows.filter(
-                sql.extract(u'year', CKANPackagerStat.inserted_on) == year)
+            query = query.filter(sql.extract(u'year', CKANPackagerStat.inserted_on) == year)
         if month:
-            rows = rows.filter(
-                sql.extract(u'month', CKANPackagerStat.inserted_on) == month)
+            query = query.filter(sql.extract(u'month', CKANPackagerStat.inserted_on) == month)
         if resource_id:
-            # if only one resource ID is provided then it'll be a string not a
-            # list. To avoid writing two filters, one using equality and one
-            # using an in clause, we'll just make a list with one element in it
-            # and then use in
-            if isinstance(resource_id, basestring):
-                resource_id = [resource_id]
-            rows = rows.filter(CKANPackagerStat.resource_id.in_(resource_id))
+            query = query.filter(CKANPackagerStat.resource_id.in_(resource_id))
+        query = query.order_by(month_part, year_part).all()
 
-        rows = rows.order_by(month_part, year_part).all()
-
-        for row in rows:
+        for row in query:
             key = u'collections' if row.collection else u'research'
             entry = stats.setdefault(row.date, default={})
             entry[key] = {
@@ -178,8 +157,7 @@ class DownloadStatistics(Statistics):
             backfill_data = json.load(jsonfile)
 
         if year:
-            backfill_data = {k: v for k, v in backfill_data.items() if
-                             k == str(year)}
+            backfill_data = {k: v for k, v in backfill_data.items() if k == str(year)}
         if month:
             backfill_data = {y: {m: w for m, w in v.items() if m == str(month)}
                              for y, v in backfill_data.items()}
@@ -193,12 +171,12 @@ class DownloadStatistics(Statistics):
 
     @staticmethod
     def merge(stats_1, stats_2):
-        '''Fills gaps in stats_1 with data from stats_2.
+        '''
+        Fills gaps in stats_1 with data from stats_2.
 
         :param stats_1: the primary dataset (has priority)
         :param stats_2: the secondary dataset to merge into the first
         :returns: an ordered dictionary sorted by month/year
-
         '''
         all_keys = list(set(stats_1.keys() + stats_2.keys()))
         categories = list(set(
