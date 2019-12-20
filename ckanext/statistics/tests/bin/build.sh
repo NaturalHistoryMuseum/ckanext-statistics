@@ -39,3 +39,4 @@ pip install -r requirements.txt
 pip install -U requests
 
 paster --plugin=ckanext-ckanpackager initdb -c $HERE/ckanext/statistics/tests/bin/test.ini
+paster --plugin=ckanext-versioned-datastore vds initdb -c ckanext/versioned_datastore/tests/bin/test.ini
