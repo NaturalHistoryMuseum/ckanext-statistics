@@ -61,7 +61,7 @@ class TestBackfillStatistics(TestBase):
 
 
 class TestCkanPackagerStats(TestBase):
-    plugins = [u'statistics', u'datastore', u'versioned_datastore']
+    plugins = [u'statistics', u'versioned_datastore']
 
     @classmethod
     def setup_class(cls):
