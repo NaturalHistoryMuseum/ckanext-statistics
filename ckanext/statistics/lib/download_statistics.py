@@ -12,11 +12,12 @@ import ckan.model as model
 import os
 from ckan.plugins import toolkit
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
-from ckanext.statistics.lib.statistics import Statistics
-from ckanext.statistics.logic.schema import statistics_downloads_schema
-from ckanext.statistics.model.gbif_download import GBIFDownload
 from ckanext.versioned_datastore.model.downloads import DatastoreDownload, state_complete
 from sqlalchemy import sql
+
+from ..lib.statistics import Statistics
+from ..logic.schema import statistics_downloads_schema
+from ..model.gbif_download import GBIFDownload
 
 backfill_filename = u'data-portal-backfill.json'
 
