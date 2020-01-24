@@ -8,8 +8,7 @@ import logging
 
 import os
 import requests
-from ckanext.statistics.model import Base
-from ckanext.statistics.model.gbif_download import GBIFDownload
+from ..model.gbif_download import gbif_downloads_table, GBIFDownload
 
 import ckan.model as model
 from ckan.plugins import toolkit
@@ -18,37 +17,43 @@ log = logging.getLogger()
 
 
 class StatisticsCommand(toolkit.CkanCommand):
-    '''Create stats from GBIF
+    '''
+    Initialise gbif_downloads table and populate it from the GBIF API.
 
+    paster --plugin=ckanext-statistics statistics initdb -c /etc/ckan/default/development.ini
     paster --plugin=ckanext-statistics statistics gbif -c /etc/ckan/default/development.ini
-
     '''
 
     summary = __doc__.split(u'\n')[0]
     usage = __doc__
 
     def command(self):
-        '''Run the command and retrieve the statistics.'''
+        '''
+        Run the command and retrieve the statistics.
+        '''
         self._load_config()
-        # Create the table if it doesn't exist
-        self._create_table()
 
         cmd = self.args[0]
-
-        if cmd == u'gbif':
+        if cmd == u'initdb':
+            self.initdb()
+        elif cmd == u'gbif':
             self.get_gbif_stats()
 
-        model.Session.commit()
+    def initdb(self):
+        '''
+        Initialises the gbif_downloads table if it doesn't exist.
+        :return:
+        '''
+        if not gbif_downloads_table.exists(model.meta.engine):
+            gbif_downloads_table.create(model.meta.engine)
 
-    @staticmethod
-    def _create_table():
-        Base.metadata.create_all(model.meta.engine)
-
-    @staticmethod
-    def get_gbif_stats():
+    def get_gbif_stats(self):
         '''
         Get stats from GBIF's API.
         '''
+        # make sure the database exists first
+        self.initdb()
+
         last_download = model.Session.query(GBIFDownload).order_by(GBIFDownload.date.desc()).first()
         seen_dois = set()
         dataset_uuid = toolkit.config[u'ckanext.gbif.dataset_key']
@@ -90,7 +95,6 @@ class StatisticsCommand(toolkit.CkanCommand):
                     count=record[u'numberRecords'],
                     date=record[u'download'][u'created'],
                 )
-                model.Session.merge(download)
-                model.Session.commit()
+                download.save()
 
             offset += limit
