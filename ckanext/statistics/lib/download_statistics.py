@@ -6,8 +6,7 @@
 
 
 import json
-from collections import OrderedDict
-from datetime import datetime as dt
+from collections import OrderedDict, defaultdict
 
 import ckan.model as model
 import os
@@ -18,6 +17,8 @@ from ckanext.statistics.logic.schema import statistics_downloads_schema
 from ckanext.statistics.model.gbif_download import GBIFDownload
 from ckanext.versioned_datastore.model.downloads import DatastoreDownload, state_complete
 from sqlalchemy import sql
+
+backfill_filename = u'data-portal-backfill.json'
 
 
 class MonthlyStats(object):
@@ -35,11 +36,24 @@ class MonthlyStats(object):
         self.year = int(year) if year is not None else None
         self.resource_id = resource_id
 
-        self.stats = {}
+        self.stats = defaultdict(lambda: {
+            u'collections': {
+                u'records': 0,
+                u'download_events': 0,
+            },
+            u'research': {
+                u'records': 0,
+                u'download_events': 0,
+            },
+            u'gbif': {
+                u'records': 0,
+                u'download_events': 0,
+            }
+        })
         # extract the collection resource ids from the config
-        self.resource_ids = toolkit.config.get(u'ckanext.statistics.resource_ids', set())
-        if self.resource_ids:
-            self.resource_ids = set(self.resource_ids.split(u' '))
+        self.collection_resource_ids = toolkit.config.get(u'ckanext.statistics.resource_ids', set())
+        if self.collection_resource_ids:
+            self.collection_resource_ids = set(self.collection_resource_ids.split(u' '))
 
     def add(self, date, resource_id, count):
         '''
@@ -77,27 +91,60 @@ class MonthlyStats(object):
             return
 
         for resource_id, count in resource_counts.items():
-            # if the month/year combo hasn't been seen yet, default it
-            if month_year not in self.stats:
-                self.stats[month_year] = {
-                    u'collections': {
-                        u'records': 0,
-                        u'download_events': 0
-                    },
-                    u'research': {
-                        u'records': 0,
-                        u'download_events': 0
-                    }
-                }
-            resource_type = u'collections' if resource_id in self.resource_ids else u'research'
+            if resource_id in self.collection_resource_ids:
+                resource_type = u'collections'
+            else:
+                resource_type = u'research'
             self.stats[month_year][resource_type][u'records'] += count
 
         resources = set(resource_counts.keys())
-        if self.resource_ids.intersection(resources):
+        if self.collection_resource_ids.intersection(resources):
             self.stats[month_year][u'collections'][u'download_events'] += 1
 
-        if resources.difference(self.resource_ids):
+        if resources.difference(self.collection_resource_ids):
             self.stats[month_year][u'research'][u'download_events'] += 1
+
+    def update_from_backfill(self, month, year, stats):
+        '''
+        Adds the given stats for the given month and year to our stats dict. The month and year
+        filters will be applied if applicable.
+
+        :param month: the month
+        :param year: the year
+        :param stats: the stats in a dict, the format of this dict must match a month/year entry in
+                      the self.stats dict
+        '''
+        if self.month is not None and self.month != int(month):
+            return
+        if self.year is not None and self.year != int(year):
+            return
+
+        month_year = u'{}/{}'.format(month, year)
+        for group in (u'collections', u'research'):
+            for count_name in (u'download_events', u'records'):
+                self.stats[month_year][group][count_name] += stats.get(group, {}).get(count_name, 0)
+
+    def update_from_gbif(self, month, year, records, download_events):
+        '''
+        Add gbif stats to this stats object.
+
+        :param month: the month
+        :param year: the year
+        :param records: the number of records downloaded
+        :param download_events: the number of download events
+        '''
+        month = int(month)
+        year = int(year)
+        if self.month is not None and self.month != month:
+            return
+        if self.year is not None and self.year != year:
+            return
+
+        month_year = u'{}/{}'.format(month, year)
+        records = int(records if records is not None else 0)
+        download_events = int(download_events if download_events is not None else 0)
+        self.stats[month_year][u'gbif'][u'records'] += records
+        self.stats[month_year][u'gbif'][u'download_events'] += download_events
 
     def as_dict(self):
         '''
@@ -128,37 +175,30 @@ class DownloadStatistics(Statistics):
         monthly_stats = MonthlyStats(month, year, resource_id)
         self.add_ckanpackager_stats(monthly_stats)
         self.add_versioned_datastore_download_stats(monthly_stats)
-        stats = monthly_stats.as_dict()
 
-        # if a resource_id has been specified, only return the ckanpackager/vdd stats sources as the
-        # other stats aren't filterable by resource ID
-        if resource_id:
-            return stats
-        else:
-            backfill = self.backfill_stats(u'data-portal-backfill.json', year, month)
-            result = self.merge(stats, backfill)
-            # Merge in the GBIF stats
-            for k, v in self.gbif_stats(year, month).items():
-                result.setdefault(k, default={})
-                result[k][u'gbif'] = v
-            return result
+        # if no resource_id has been specified we can add the backfill and gbif stats as they aren't
+        # filterable by resource ID
+        if not resource_id:
+            self.add_backfill_stats(backfill_filename, monthly_stats)
+            self.add_gbif_stats(monthly_stats, year, month)
+
+        return monthly_stats.as_dict()
 
     @staticmethod
-    def gbif_stats(year=None, month=None):
+    def add_gbif_stats(monthly_stats, year=None, month=None):
         '''
-        Get GBIF download stats
+        Add the GBIF download stats to the monthly stats object.
 
+        :param monthly_stats: the MonthlyStats object to add the GBIF stats to
         :param year: (optional, default: None)
         :param month: (optional, default: None)
-        :returns: dict of GBIF stats
         '''
-        stats = OrderedDict()
-
         year_part = sql.func.date_part(u'year', GBIFDownload.date).label(u'year')
         month_part = sql.func.date_part(u'month', GBIFDownload.date).label(u'month')
 
         rows = model.Session.query(
-            sql.func.concat(month_part, u'/', year_part).label(u'date'),
+            month_part,
+            year_part,
             sql.func.sum(GBIFDownload.count).label(u'records'),
             sql.func.count().label(u'download_events')
         ).group_by(year_part, month_part)
@@ -168,16 +208,8 @@ class DownloadStatistics(Statistics):
         if month:
             rows = rows.filter(sql.extract(u'month', GBIFDownload.date) == month)
 
-        rows = rows.order_by(month_part, year_part).all()
-
         for row in rows:
-            stats[row.date] = {
-                u'records': int(row.records if row.records is not None else 0),
-                u'download_events':
-                    int(row.download_events if row.download_events is not None else 0)
-            }
-
-        return stats
+            monthly_stats.update_from_gbif(row.month, row.year, row.records, row.download_events)
 
     @staticmethod
     def add_ckanpackager_stats(monthly_stats):
@@ -215,57 +247,21 @@ class DownloadStatistics(Statistics):
             monthly_stats.add_all(download.created, download.resource_totals)
 
     @staticmethod
-    def backfill_stats(filename, year=None, month=None):
-        '''Loads static data from a json file that can be used to fill gaps in
-        the API's returned statistics.
+    def add_backfill_stats(filename, monthly_stats):
+        '''
+        Updates the MonthlyStats object with static data from a json file that can be used to fill
+        gaps in the API's returned statistics.
 
         :param filename: the name of the json file containing the statistics
-        :param year: the year to load data for (optional, default: None)
-        :param month: the month to load data for (optional, default: None)
-        :returns: a dictionary of download statistics keyed on month/year
-
+        :param monthly_stats: a MonthlyStats object
         '''
         if filename is None:
-            return {}
-        backfill_file = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)),
-            u'data', filename)
-        with open(backfill_file, u'r') as jsonfile:
-            backfill_data = json.load(jsonfile)
+            return
 
-        if year:
-            backfill_data = {k: v for k, v in backfill_data.items() if k == str(year)}
-        if month:
-            backfill_data = {y: {m: w for m, w in v.items() if m == str(month)}
-                             for y, v in backfill_data.items()}
+        backfill_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), u'data', filename)
+        with open(backfill_file, u'r') as data:
+            backfill_data = json.load(data)
 
-        stats = {}
-        for y in backfill_data:
-            for m in backfill_data[y]:
-                stats[u'{0}/{1}'.format(m, y)] = backfill_data[y][m]
-
-        return stats
-
-    @staticmethod
-    def merge(stats_1, stats_2):
-        '''
-        Fills gaps in stats_1 with data from stats_2.
-
-        :param stats_1: the primary dataset (has priority)
-        :param stats_2: the secondary dataset to merge into the first
-        :returns: an ordered dictionary sorted by month/year
-        '''
-        all_keys = list(set(stats_1.keys() + stats_2.keys()))
-        categories = list(set(
-            [i for k in stats_1.values() + stats_2.values() for i in
-             k.keys()]))
-        stat_names = list(set([i for k in (stats_1.values() +
-                                           stats_2.values()) for i in
-                               [x for v in k.values() for x in v.keys()]]))
-        ordered_stats = OrderedDict()
-        for key in sorted(all_keys, key=lambda x: dt.strptime(
-            x if len(x) == 7 else u'0' + x, u'%m/%Y')):
-            ordered_stats[key] = {
-                c: {s: stats_1.get(key, stats_2.get(key)).get(c, {}).get(s, 0) for
-                    s in stat_names} for c in categories}
-        return ordered_stats
+        for year in backfill_data:
+            for month, stats in backfill_data[year].items():
+                monthly_stats.update_from_backfill(month, year, stats)
