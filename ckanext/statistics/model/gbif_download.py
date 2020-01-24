@@ -5,15 +5,25 @@
 # Created by the Natural History Museum in London, UK
 
 
-from ckanext.statistics.model import Base
-from sqlalchemy import Column, DateTime, Integer, String, func
+from ckan.model import meta, DomainObject
+from sqlalchemy import Column, DateTime, Integer, func, Table
+
+gbif_downloads_table = Table(
+    u'gbif_downloads',
+    meta.metadata,
+    Column(u'doi', Integer, primary_key=True),
+    Column(u'date', DateTime),
+    # the current timestamp
+    Column(u'inserted_on', DateTime, default=func.now()),
+    Column(u'count', Integer),
+)
 
 
-class GBIFDownload(Base):
-    '''Table for holding resource stats'''
-    __tablename__ = u'gbif_downloads'
+class GBIFDownload(DomainObject):
+    '''
+    Object for a datastore download row.
+    '''
+    pass
 
-    doi = Column(String, primary_key=True)
-    date = Column(DateTime)  # the current timestamp
-    inserted_on = Column(DateTime, default=func.now())  # the current timestamp
-    count = Column(Integer)
+
+meta.mapper(GBIFDownload, gbif_downloads_table)
