@@ -38,4 +38,6 @@ pip install -r requirements.txt
 # to fix a urllib3 dependency error for requests
 pip install -U requests
 
+paster --plugin=ckanext-statistics statistics initdb -c $HERE/ckanext/statistics/tests/bin/test.ini
 paster --plugin=ckanext-ckanpackager initdb -c $HERE/ckanext/statistics/tests/bin/test.ini
+paster --plugin=ckanext-versioned-datastore vds initdb -c $HERE/ckanext/statistics/tests/bin/test.ini
