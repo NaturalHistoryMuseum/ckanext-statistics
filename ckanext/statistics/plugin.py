@@ -6,7 +6,7 @@
 
 
 from ckanext.statistics.logic.action import dataset_statistics, download_statistics
-
+from . import cli
 from ckan.plugins import SingletonPlugin, implements, interfaces
 
 
@@ -14,12 +14,16 @@ class StatisticsPlugin(SingletonPlugin):
     '''NHM Statistics'''
 
     implements(interfaces.IActions)
+    implements(interfaces.IClick)
 
     # IActions
     @staticmethod
     def get_actions():
-        ''' '''
         return {
             u'download_statistics': download_statistics,
             u'dataset_statistics': dataset_statistics
-            }
+        }
+
+    # IClick
+    def get_commands(self):
+        return cli.get_commands()

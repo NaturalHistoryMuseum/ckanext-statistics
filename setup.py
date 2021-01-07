@@ -37,7 +37,8 @@ setup(
     zip_safe=False,
     install_requires=[
         'requests',
-        'pysolr==3.6.0'
+        'pysolr==3.6.0',
+        'tqdm>=4.55.1',
         ] + [u'{0} @ {1}'.format(k, v) for k, v in dependencies.items()],
     dependency_links=dependencies.values(),
     entry_points= \
