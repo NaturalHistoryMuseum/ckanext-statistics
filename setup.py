@@ -45,8 +45,5 @@ setup(
         u'''
         [ckan.plugins]
             statistics=ckanext.statistics.plugin:StatisticsPlugin
-
-        [paste.paster_command]
-            statistics=ckanext.statistics.commands.statistics:StatisticsCommand
         ''',
     )
