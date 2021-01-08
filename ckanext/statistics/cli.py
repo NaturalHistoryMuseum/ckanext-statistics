@@ -68,7 +68,7 @@ def update_gbif_stats():
         download.save()
         count += 1
 
-    click.secho(u'Finished retrieving stats with {} new downloads'.format(count), fg=u'green')
+    click.secho(u'Finished updating stats with {} new downloads'.format(count), fg=u'green')
 
 
 def get_gbif_stats(dataset_uuid, limit=100):
