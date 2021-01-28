@@ -5,9 +5,10 @@
 # Created by the Natural History Museum in London, UK
 
 
+from ckan.plugins import SingletonPlugin, implements, interfaces
+
 from ckanext.statistics.logic.action import dataset_statistics, download_statistics
 from . import cli
-from ckan.plugins import SingletonPlugin, implements, interfaces
 
 
 class StatisticsPlugin(SingletonPlugin):
@@ -20,8 +21,8 @@ class StatisticsPlugin(SingletonPlugin):
     @staticmethod
     def get_actions():
         return {
-            u'download_statistics': download_statistics,
-            u'dataset_statistics': dataset_statistics
+            'download_statistics': download_statistics,
+            'dataset_statistics': dataset_statistics
         }
 
     # IClick

@@ -19,7 +19,7 @@ from ..lib.statistics import Statistics
 from ..logic.schema import statistics_downloads_schema
 from ..model.gbif_download import GBIFDownload
 
-backfill_filename = u'data-portal-backfill.json'
+backfill_filename = 'data-portal-backfill.json'
 
 
 class MonthlyStats(object):
@@ -38,23 +38,23 @@ class MonthlyStats(object):
         self.resource_id = resource_id
 
         self.stats = defaultdict(lambda: {
-            u'collections': {
-                u'records': 0,
-                u'download_events': 0,
+            'collections': {
+                'records': 0,
+                'download_events': 0,
             },
-            u'research': {
-                u'records': 0,
-                u'download_events': 0,
+            'research': {
+                'records': 0,
+                'download_events': 0,
             },
-            u'gbif': {
-                u'records': 0,
-                u'download_events': 0,
+            'gbif': {
+                'records': 0,
+                'download_events': 0,
             }
         })
         # extract the collection resource ids from the config
-        self.collection_resource_ids = toolkit.config.get(u'ckanext.statistics.resource_ids', set())
+        self.collection_resource_ids = toolkit.config.get('ckanext.statistics.resource_ids', set())
         if self.collection_resource_ids:
-            self.collection_resource_ids = set(self.collection_resource_ids.split(u' '))
+            self.collection_resource_ids = set(self.collection_resource_ids.split(' '))
 
     def add(self, date, resource_id, count):
         '''
@@ -76,8 +76,8 @@ class MonthlyStats(object):
         :param date: the date of the download event
         :param resource_counts: a dict of resource ids -> counts
         '''
-        month_year = date.strftime(u'%-m/%Y')
-        month, year = map(int, month_year.split(u'/'))
+        month_year = date.strftime('%-m/%Y')
+        month, year = map(int, month_year.split('/'))
 
         # filter the download event
         if self.resource_id is not None:
@@ -93,17 +93,17 @@ class MonthlyStats(object):
 
         for resource_id, count in resource_counts.items():
             if resource_id in self.collection_resource_ids:
-                resource_type = u'collections'
+                resource_type = 'collections'
             else:
-                resource_type = u'research'
-            self.stats[month_year][resource_type][u'records'] += count
+                resource_type = 'research'
+            self.stats[month_year][resource_type]['records'] += count
 
         resources = set(resource_counts.keys())
         if self.collection_resource_ids.intersection(resources):
-            self.stats[month_year][u'collections'][u'download_events'] += 1
+            self.stats[month_year]['collections']['download_events'] += 1
 
         if resources.difference(self.collection_resource_ids):
-            self.stats[month_year][u'research'][u'download_events'] += 1
+            self.stats[month_year]['research']['download_events'] += 1
 
     def update_from_backfill(self, month, year, stats):
         '''
@@ -120,9 +120,9 @@ class MonthlyStats(object):
         if self.year is not None and self.year != int(year):
             return
 
-        month_year = u'{}/{}'.format(month, year)
-        for group in (u'collections', u'research'):
-            for count_name in (u'download_events', u'records'):
+        month_year = f'{month}/{year}'
+        for group in ('collections', 'research'):
+            for count_name in ('download_events', 'records'):
                 self.stats[month_year][group][count_name] += stats.get(group, {}).get(count_name, 0)
 
     def update_from_gbif(self, month, year, records, download_events):
@@ -141,11 +141,11 @@ class MonthlyStats(object):
         if self.year is not None and self.year != year:
             return
 
-        month_year = u'{}/{}'.format(month, year)
+        month_year = f'{month}/{year}'
         records = int(records if records is not None else 0)
         download_events = int(download_events if download_events is not None else 0)
-        self.stats[month_year][u'gbif'][u'records'] += records
-        self.stats[month_year][u'gbif'][u'download_events'] += download_events
+        self.stats[month_year]['gbif']['records'] += records
+        self.stats[month_year]['gbif']['download_events'] += download_events
 
     def as_dict(self):
         '''
@@ -154,7 +154,7 @@ class MonthlyStats(object):
         :return: an OrderedDict
         '''
         return OrderedDict(sorted(self.stats.items(),
-                                  key=lambda x: tuple(map(int, reversed(x[0].split(u'/'))))))
+                                  key=lambda x: tuple(map(int, reversed(x[0].split('/'))))))
 
 
 class DownloadStatistics(Statistics):
@@ -194,20 +194,20 @@ class DownloadStatistics(Statistics):
         :param year: (optional, default: None)
         :param month: (optional, default: None)
         '''
-        year_part = sql.func.date_part(u'year', GBIFDownload.date).label(u'year')
-        month_part = sql.func.date_part(u'month', GBIFDownload.date).label(u'month')
+        year_part = sql.func.date_part('year', GBIFDownload.date).label('year')
+        month_part = sql.func.date_part('month', GBIFDownload.date).label('month')
 
         rows = model.Session.query(
             month_part,
             year_part,
-            sql.func.sum(GBIFDownload.count).label(u'records'),
-            sql.func.count().label(u'download_events')
+            sql.func.sum(GBIFDownload.count).label('records'),
+            sql.func.count().label('download_events')
         ).group_by(year_part, month_part)
 
         if year:
-            rows = rows.filter(sql.extract(u'year', GBIFDownload.date) == year)
+            rows = rows.filter(sql.extract('year', GBIFDownload.date) == year)
         if month:
-            rows = rows.filter(sql.extract(u'month', GBIFDownload.date) == month)
+            rows = rows.filter(sql.extract('month', GBIFDownload.date) == month)
 
         for row in rows:
             monthly_stats.update_from_gbif(row.month, row.year, row.records, row.download_events)
@@ -259,8 +259,8 @@ class DownloadStatistics(Statistics):
         if filename is None:
             return
 
-        backfill_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), u'data', filename)
-        with open(backfill_file, u'r') as data:
+        backfill_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'data', filename)
+        with open(backfill_file, 'r') as data:
             backfill_data = json.load(data)
 
         for year in backfill_data:

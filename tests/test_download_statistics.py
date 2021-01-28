@@ -15,7 +15,7 @@ from ckanext.statistics.model.gbif_download import GBIFDownload, gbif_downloads_
 from ckanext.versioned_datastore.model import stats, slugs, details, downloads
 from ckanext.versioned_datastore.model.downloads import DatastoreDownload, state_complete, \
     state_zipping
-from mock import MagicMock, call
+from unittest.mock import MagicMock, call
 
 
 class TestMonthlyStats(object):
