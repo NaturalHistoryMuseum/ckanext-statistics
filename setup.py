@@ -6,15 +6,21 @@
 
 from setuptools import find_packages, setup
 
-__version__ = u'1.0.0-alpha'
+__version__ = u'1.0.1'
 
 with open(u'README.md', u'r') as f:
     __long_description__ = f.read()
 
-dependencies = {
-    u'ckanext-ckanpackager': u'git+https://github.com/NaturalHistoryMuseum/ckanext-ckanpackager.git#egg=ckanext-ckanpackager',
-    u'ckanext-versioned-datastore': u'git+https://github.com/NaturalHistoryMuseum/ckanext-versioned-datastore.git#egg=ckanext-versioned-datastore',
-}
+
+def nhm_github(name, tag):
+    return name, u'git+https://github.com/NaturalHistoryMuseum/{name}.git@{tag}#egg={name}'.format(
+        name=name, tag=tag)
+
+
+dependencies = dict([
+    nhm_github(u'ckanext-ckanpackager', u'319bd63158757a9287336034122cae66c2991a41'),
+    nhm_github(u'ckanext-versioned-datastore', u'd88e167a838e95af2448b60c7df67f2e2fe86eed'),
+])
 
 setup(
     name=u'ckanext-statistics',
@@ -36,13 +42,11 @@ setup(
     include_package_data=True,
     zip_safe=False,
     install_requires=[
-        'requests',
-        'pysolr==3.6.0',
-        'tqdm>=4.55.1',
-        ] + [u'{0} @ {1}'.format(k, v) for k, v in dependencies.items()],
-    dependency_links=dependencies.values(),
-    entry_points= \
-        u'''
+        u'requests',
+        u'tqdm>=4.55.1',
+    ] + [u'{0} @ {1}'.format(k, v) for k, v in dependencies.items()],
+    dependency_links=list(dependencies.values()),
+    entry_points=u'''
         [ckan.plugins]
             statistics=ckanext.statistics.plugin:StatisticsPlugin
         ''',
