@@ -13,9 +13,7 @@ with open('README.md', 'r') as f:
 
 
 def nhm_github(name, tag):
-    return name, 'git+https://github.com/NaturalHistoryMuseum/{name}.git@{tag}#egg={name}'.format(
-        name=name, tag=tag)
-
+    return name, f'git+https://github.com/NaturalHistoryMuseum/{name}@{tag}#egg={name}'
 
 dependencies = dict([
     nhm_github('ckanext-ckanpackager', 'josh/ckan-upgrade-2.9'),
