@@ -9,13 +9,13 @@ from ckan.model import meta, DomainObject
 from sqlalchemy import Column, DateTime, Integer, func, Table, UnicodeText
 
 gbif_downloads_table = Table(
-    u'gbif_downloads',
+    'gbif_downloads',
     meta.metadata,
-    Column(u'doi', UnicodeText, primary_key=True),
-    Column(u'date', DateTime),
+    Column('doi', UnicodeText, primary_key=True),
+    Column('date', DateTime),
     # the current timestamp
-    Column(u'inserted_on', DateTime, default=func.now()),
-    Column(u'count', Integer),
+    Column('inserted_on', DateTime, default=func.now()),
+    Column('count', Integer),
 )
 
 
