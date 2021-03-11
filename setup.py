@@ -17,7 +17,7 @@ def nhm_github(name, tag):
 
 dependencies = dict([
     nhm_github('ckanext-ckanpackager', 'v2.0.0'),
-    nhm_github('ckanext-versioned-datastore', 'v2.0.0'),
+    nhm_github('ckanext-versioned-datastore', 'v3.0.0'),
 ])
 
 setup(
