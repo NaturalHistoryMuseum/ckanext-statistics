@@ -105,9 +105,14 @@ toolkit.get_action('dataset_statistics')(
 
 ### `statistics`
 
-1. `gbif`: retrieve download statistics from [GBIF](https://gbif.org).
+1. `initdb`: initialise the database model
+   ```bash
+    ckan -c $CONFIG_FILE statistics initdb
+   ```
+
+2. `gbif`: retrieve download statistics from [GBIF](https://gbif.org).
     ```bash
-    paster --plugin=ckanext-statistics statistics gbif -c $CONFIG_FILE
+    ckan -c $CONFIG_FILE statistics gbif
     ```
 
 
