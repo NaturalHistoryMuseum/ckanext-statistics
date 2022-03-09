@@ -107,7 +107,7 @@ toolkit.get_action('dataset_statistics')(
 
 1. `gbif`: retrieve download statistics from [GBIF](https://gbif.org).
     ```bash
-    paster --plugin=ckanext-statistics statistics gbif -c $CONFIG_FILE
+    ckan -c $CONFIG_FILE statistics gbif
     ```
 
 
