@@ -6,7 +6,7 @@
 
 from setuptools import find_packages, setup
 
-__version__ = '2.0.4'
+__version__ = '2.0.5'
 
 with open('README.md', 'r') as f:
     __long_description__ = f.read()
@@ -17,7 +17,7 @@ def nhm_github(name, tag):
 
 dependencies = dict([
     nhm_github('ckanext-ckanpackager', 'v2.0.0'),
-    nhm_github('ckanext-versioned-datastore', 'v3.2.0'),
+    nhm_github('ckanext-versioned-datastore', 'v3.2.1'),
 ])
 
 setup(
