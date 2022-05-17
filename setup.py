@@ -16,7 +16,7 @@ def nhm_github(name, tag):
     return name, f'git+https://github.com/NaturalHistoryMuseum/{name}@{tag}#egg={name}'
 
 dependencies = dict([
-    nhm_github('ckanext-ckanpackager', 'v2.1.0'),
+    nhm_github('ckanext-ckanpackager', 'v2.1.1'),
     nhm_github('ckanext-versioned-datastore', 'v3.4.0'),
 ])
 
