@@ -6,7 +6,7 @@
 
 from setuptools import find_packages, setup
 
-__version__ = '2.0.7'
+__version__ = '2.0.8'
 
 with open('README.md', 'r') as f:
     __long_description__ = f.read()
@@ -16,7 +16,7 @@ def nhm_github(name, tag):
     return name, f'git+https://github.com/NaturalHistoryMuseum/{name}@{tag}#egg={name}'
 
 dependencies = dict([
-    nhm_github('ckanext-ckanpackager', 'v2.1.0'),
+    nhm_github('ckanext-ckanpackager', 'v2.1.1'),
     nhm_github('ckanext-versioned-datastore', 'v3.4.0'),
 ])
 
