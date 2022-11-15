@@ -18,9 +18,9 @@ def statistics():
 
 @statistics.command(name='initdb')
 def init_db():
-    '''
+    """
     Initialises the gbif_downloads table if it doesn't exist.
-    '''
+    """
     if not gbif_downloads_table.exists():
         gbif_downloads_table.create()
         click.secho('Created gbif_downloads table', fg='green')
@@ -30,15 +30,17 @@ def init_db():
 
 @statistics.command(name='update-gbif-stats')
 def update_gbif_stats():
-    '''
+    """
     Get download stats for the specimen dataset from GBIF's API.
-    '''
+    """
     # make sure the table we need exists first
     if not gbif_downloads_table.exists():
         gbif_downloads_table.create()
         click.secho('Created gbif_downloads table', fg='green')
 
-    last_download = model.Session.query(GBIFDownload).order_by(GBIFDownload.date.desc()).first()
+    last_download = (
+        model.Session.query(GBIFDownload).order_by(GBIFDownload.date.desc()).first()
+    )
     seen_dois = set()
     dataset_uuid = toolkit.config['ckanext.gbif.dataset_key']
     count = 0
@@ -72,13 +74,13 @@ def update_gbif_stats():
 
 
 def get_gbif_stats(dataset_uuid, limit=100):
-    '''
+    """
     Generates download statistic records from the GBIF API for the given dataset_uuid.
 
     :param dataset_uuid: the dataset uuid to get stats records for
     :param limit: the number of records to retrieve at once (default: 100)
     :return: yields dicts
-    '''
+    """
     offset = 0
     url = f'https://api.gbif.org/v1/occurrence/download/dataset/{dataset_uuid}'
 
