@@ -15,7 +15,8 @@ services:
       - elasticsearch
       - mongodb
     volumes:
-      - .:/base/src/ckanext-statistics
+      - ./ckanext:/base/src/ckanext-statistics/ckanext
+      - ./tests:/base/src/ckanext-statistics/tests
 
   solr:
     image: ckan/ckan-solr:2.9
