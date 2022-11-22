@@ -1,3 +1,4 @@
+<!--header-start-->
 <img src=".github/nhm-logo.svg" align="left" width="150px" height="100px" hspace="40"/>
 
 # ckanext-statistics
@@ -10,16 +11,20 @@
 
 _A CKAN extension for accessing instance statistics._
 
+<!--header-end-->
 
 # Overview
 
+<!--overview-start-->
 Shows statistics for datasets and downloads on the CKAN instance.
 
 **NB**: This extension currently only works with the Natural History Museum's theme extension [ckanext-nhm](https://github.com/NaturalHistoryMuseum/ckanext-nhm).
 
+<!--overview-end-->
 
 # Installation
 
+<!--installation-start-->
 Path variables used below:
 - `$INSTALL_FOLDER` (i.e. where CKAN is installed), e.g. `/usr/lib/ckan/default`
 - `$CONFIG_FILE`, e.g. `/etc/ckan/default/development.ini`
@@ -57,13 +62,18 @@ Path variables used below:
   ckan.plugins = ... statistics
   ```
 
+<!--installation-end-->
+
 # Configuration
 
+<!--configuration-start-->
 These are no configuration options for this extension.
 
+<!--configuration-end-->
 
 # Usage
 
+<!--usage-start-->
 ## Actions
 
 ### `download_statistics`
@@ -116,9 +126,11 @@ toolkit.get_action('dataset_statistics')(
     ckan -c $CONFIG_FILE statistics gbif
     ```
 
+<!--usage-end-->
 
 # Testing
 
+<!--testing-start-->
 There is a Docker compose configuration available in this repository to make it easier to run tests.
 
 To run the tests against ckan 2.9.x on Python3:
@@ -137,3 +149,5 @@ docker-compose run ckan
 ```
 
 The ckan image uses the Dockerfile in the `docker/` folder.
+
+<!--testing-end-->
