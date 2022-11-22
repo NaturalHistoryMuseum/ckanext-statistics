@@ -22,11 +22,11 @@ def list_of_resource_ids(key, data, errors, context):
 
 
 def statistics_downloads_schema():
-    '''Month and Year parameters
+    """
+    Month and Year parameters.
 
     :returns: schema
-
-    '''
+    """
     schema = {
         'month': [ignore_missing, int_validator],
         'year': [ignore_missing, int_validator],
@@ -36,11 +36,11 @@ def statistics_downloads_schema():
 
 
 def statistics_dataset_schema():
-    '''Resource ID
+    """
+    Resource ID.
 
     :returns: schema
-
-    '''
+    """
     schema = {
         'resource_id': [ignore_missing, resource_id_exists],
     }

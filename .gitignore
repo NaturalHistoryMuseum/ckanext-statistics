@@ -1,5 +1,9 @@
+*.egg-info
 *.pyc
-*.egg-info/
-*.db
-.idea
+.noseids
+.pytest_cache
 .coverage
+build/
+dist/
+.idea
+**/node_modules/

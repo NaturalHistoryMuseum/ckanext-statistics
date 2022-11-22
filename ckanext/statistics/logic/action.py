@@ -14,12 +14,12 @@ from ckanext.statistics.lib.download_statistics import DownloadStatistics
 @toolkit.side_effect_free
 @toolkit.auth_allow_anonymous_access
 def download_statistics(context, data_dict):
-    '''
-    Data Portal download stats
+    """
+    Data Portal download stats.
 
     :param context:
     :param data_dict:
-    '''
+    """
     statistics = DownloadStatistics(context, data_dict)
     statistics.validate()
     return statistics.get()
@@ -28,12 +28,12 @@ def download_statistics(context, data_dict):
 @toolkit.side_effect_free
 @toolkit.auth_allow_anonymous_access
 def dataset_statistics(context, data_dict):
-    '''
-    Data Portal dataset stats
+    """
+    Data Portal dataset stats.
 
     :param context:
     :param data_dict:
-    '''
+    """
     statistics = DatasetStatistics(context, data_dict)
     statistics.validate()
     return statistics.get()
