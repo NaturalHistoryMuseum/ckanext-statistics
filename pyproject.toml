@@ -1,6 +1,6 @@
 [project]
 name = "ckanext-statistics"
-version = "2.0.1"
+version = "2.0.15"
 description = "A CKAN extension for accessing instance statistics."
 readme = "README.md"
 requires-python = ">=3.6"
@@ -19,11 +19,11 @@ classifiers = [
     "Programming Language :: Python :: 3.8"
 ]
 dependencies = [
-    "ckantools",
+    "ckantools>=0.3.0",
     "requests",
     "tqdm>=4.55.1",
-    "ckanext-ckanpackager>2.0.0",
-    "ckanext-versioned-datastore>3.0.0"
+    "ckanext-ckanpackager>=2.1.0",
+    "ckanext-versioned-datastore>=3.6.0"
 ]
 
 [project.optional-dependencies]
@@ -56,10 +56,10 @@ exclude = ["tests", "docs"]
 
 [tool.commitizen]
 name = "cz_nhm"
-version = "2.0.1"
+version = "2.0.15"
 tag_format = "v$version"
 update_changelog_on_bump = true
-changelog_incremental = false
+changelog_incremental = true
 version_files = [
     "pyproject.toml:version"
 ]
