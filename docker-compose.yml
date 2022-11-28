@@ -15,11 +15,11 @@ services:
       - elasticsearch
       - mongodb
     volumes:
-      - .:/srv/app/src/ckanext-statistics
+      - ./ckanext:/base/src/ckanext-statistics/ckanext
+      - ./tests:/base/src/ckanext-statistics/tests
 
   solr:
-    build:
-      context: https://github.com/okfn/docker-ckan.git#:solr
+    image: ckan/ckan-solr:2.9
     logging:
       driver: none
 

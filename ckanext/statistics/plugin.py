@@ -12,7 +12,9 @@ from . import cli
 
 
 class StatisticsPlugin(SingletonPlugin):
-    '''NHM Statistics'''
+    """
+    NHM Statistics.
+    """
 
     implements(interfaces.IActions)
     implements(interfaces.IClick)
@@ -22,7 +24,7 @@ class StatisticsPlugin(SingletonPlugin):
     def get_actions():
         return {
             'download_statistics': download_statistics,
-            'dataset_statistics': dataset_statistics
+            'dataset_statistics': dataset_statistics,
         }
 
     # IClick

@@ -20,9 +20,10 @@ gbif_downloads_table = Table(
 
 
 class GBIFDownload(DomainObject):
-    '''
+    """
     Object for a datastore download row.
-    '''
+    """
+
     pass
 
 

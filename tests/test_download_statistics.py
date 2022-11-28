@@ -13,13 +13,15 @@ from ckanext.ckanpackager.model.stat import CKANPackagerStat, ckanpackager_stats
 from ckanext.statistics.lib.download_statistics import DownloadStatistics, MonthlyStats
 from ckanext.statistics.model.gbif_download import GBIFDownload, gbif_downloads_table
 from ckanext.versioned_datastore.model import stats, slugs, details, downloads
-from ckanext.versioned_datastore.model.downloads import DatastoreDownload, state_complete, \
-    state_zipping
+from ckanext.versioned_datastore.model.downloads import (
+    DatastoreDownload,
+    state_complete,
+    state_zipping,
+)
 from unittest.mock import MagicMock, call
 
 
 class TestMonthlyStats(object):
-
     def test_add_all_no_filters_all_research(self):
         date = datetime(2020, 1, 1)
         resource_counts = {
@@ -127,7 +129,9 @@ class TestMonthlyStats(object):
         assert monthly_stats.stats[u'1/2020'][u'collections'][u'records'] == 0
         assert monthly_stats.stats[u'1/2020'][u'collections'][u'download_events'] == 0
 
-    @pytest.mark.ckan_config(u'ckanext.statistics.resource_ids', u'cresource2 resource2')
+    @pytest.mark.ckan_config(
+        u'ckanext.statistics.resource_ids', u'cresource2 resource2'
+    )
     def test_add_all_complex_filter_mixed(self):
         date = datetime(2019, 6, 1)
         resource_counts = {
@@ -176,21 +180,27 @@ class TestMonthlyStats(object):
 
         stats = monthly_stats.as_dict()
         assert isinstance(stats, OrderedDict)
-        assert list(stats.keys()) == [u'1/2013', u'6/2013', u'11/2013', u'4/2017', u'10/2020']
+        assert list(stats.keys()) == [
+            u'1/2013',
+            u'6/2013',
+            u'11/2013',
+            u'4/2017',
+            u'10/2020',
+        ]
 
     def test_update_from_backfill_no_previous_data(self):
         monthly_stats = MonthlyStats()
-        monthly_stats.update_from_backfill(u'10', u'2018', {
-            u'collections': {
-                u'download_events': 102,
-                u'records': 1029
+        monthly_stats.update_from_backfill(
+            u'10',
+            u'2018',
+            {
+                u'collections': {u'download_events': 102, u'records': 1029},
+                u'research': {u'download_events': 4, u'records': 902832},
             },
-            u'research': {
-                u'download_events': 4,
-                u'records': 902832
-            }
-        })
-        assert monthly_stats.stats[u'10/2018'][u'collections'][u'download_events'] == 102
+        )
+        assert (
+            monthly_stats.stats[u'10/2018'][u'collections'][u'download_events'] == 102
+        )
         assert monthly_stats.stats[u'10/2018'][u'collections'][u'records'] == 1029
         assert monthly_stats.stats[u'10/2018'][u'research'][u'download_events'] == 4
         assert monthly_stats.stats[u'10/2018'][u'research'][u'records'] == 902832
@@ -203,53 +213,73 @@ class TestMonthlyStats(object):
         # this isn't a collection resource
         monthly_stats.add(datetime(2018, 10, 1), u'resource2', 15)
         # update from the backfill
-        monthly_stats.update_from_backfill(u'10', u'2018', {
-            u'collections': {
-                u'download_events': 3,
-                u'records': 10004,
+        monthly_stats.update_from_backfill(
+            u'10',
+            u'2018',
+            {
+                u'collections': {
+                    u'download_events': 3,
+                    u'records': 10004,
+                },
+                u'research': {
+                    u'download_events': 5829,
+                    u'records': 32894932,
+                },
             },
-            u'research': {
-                u'download_events': 5829,
-                u'records': 32894932,
-            }
-        })
-        assert monthly_stats.stats[u'10/2018'][u'collections'][u'download_events'] == 3 + 1
+        )
+        assert (
+            monthly_stats.stats[u'10/2018'][u'collections'][u'download_events'] == 3 + 1
+        )
         assert monthly_stats.stats[u'10/2018'][u'collections'][u'records'] == 10004 + 20
-        assert monthly_stats.stats[u'10/2018'][u'research'][u'download_events'] == 5829 + 1
+        assert (
+            monthly_stats.stats[u'10/2018'][u'research'][u'download_events'] == 5829 + 1
+        )
         assert monthly_stats.stats[u'10/2018'][u'research'][u'records'] == 32894932 + 15
 
     def test_update_from_backfill_with_filters(self):
         monthly_stats = MonthlyStats(month=10, year=2018)
-        monthly_stats.update_from_backfill(u'10', u'2018', {
-            u'collections': {
-                u'download_events': 3,
-                u'records': 10004,
+        monthly_stats.update_from_backfill(
+            u'10',
+            u'2018',
+            {
+                u'collections': {
+                    u'download_events': 3,
+                    u'records': 10004,
+                },
+                u'research': {
+                    u'download_events': 5829,
+                    u'records': 32894932,
+                },
             },
-            u'research': {
-                u'download_events': 5829,
-                u'records': 32894932,
-            }
-        })
-        monthly_stats.update_from_backfill(u'11', u'2018', {
-            u'collections': {
-                u'download_events': 3,
-                u'records': 10004,
+        )
+        monthly_stats.update_from_backfill(
+            u'11',
+            u'2018',
+            {
+                u'collections': {
+                    u'download_events': 3,
+                    u'records': 10004,
+                },
+                u'research': {
+                    u'download_events': 5829,
+                    u'records': 32894932,
+                },
             },
-            u'research': {
-                u'download_events': 5829,
-                u'records': 32894932,
-            }
-        })
-        monthly_stats.update_from_backfill(u'11', u'2017', {
-            u'collections': {
-                u'download_events': 3,
-                u'records': 10004,
+        )
+        monthly_stats.update_from_backfill(
+            u'11',
+            u'2017',
+            {
+                u'collections': {
+                    u'download_events': 3,
+                    u'records': 10004,
+                },
+                u'research': {
+                    u'download_events': 5829,
+                    u'records': 32894932,
+                },
             },
-            u'research': {
-                u'download_events': 5829,
-                u'records': 32894932,
-            }
-        })
+        )
         assert u'10/2018' in monthly_stats.stats
         assert u'11/2018' not in monthly_stats.stats
         assert u'11/2017' not in monthly_stats.stats
@@ -275,10 +305,10 @@ class TestMonthlyStats(object):
 
 @pytest.fixture
 def with_needed_tables(reset_db):
-    '''
-    Simple fixture which resets the database and creates the tables we need from this extension plus
-    the versioned datastore and ckanpackager extensions.
-    '''
+    """
+    Simple fixture which resets the database and creates the tables we need from this
+    extension plus the versioned datastore and ckanpackager extensions.
+    """
     reset_db()
     tables = [
         stats.import_stats_table,
@@ -294,11 +324,12 @@ def with_needed_tables(reset_db):
             table.create()
 
 
-@pytest.mark.ckan_config(u'ckan.plugins', u'statistics versioned_datastore ckanpackager')
+@pytest.mark.ckan_config(
+    u'ckan.plugins', u'statistics versioned_datastore ckanpackager'
+)
 @pytest.mark.usefixtures(u'with_needed_tables', u'with_plugins')
 @pytest.mark.filterwarnings(u'ignore::sqlalchemy.exc.SADeprecationWarning')
 class TestDownloadStatistics(object):
-
     def test_get_statistics_no_filters_calls_the_right_functions(self):
         dl_stats = DownloadStatistics(MagicMock(), MagicMock())
 
@@ -338,7 +369,7 @@ class TestDownloadStatistics(object):
             GBIFDownload(doi=u'doi4', date=datetime(2018, 8, 21), count=289),
             GBIFDownload(doi=u'doi5', date=datetime(2019, 2, 11), count=490),
             GBIFDownload(doi=u'doi6', date=datetime(2019, 2, 5), count=1),
-            GBIFDownload(doi=u'doi7', date=datetime(2013, 1, 1), count=29000)
+            GBIFDownload(doi=u'doi7', date=datetime(2013, 1, 1), count=29000),
         ]
         for download in downloads:
             download.save()
@@ -356,10 +387,18 @@ class TestDownloadStatistics(object):
 
     def test_add_ckanpackager_stats(self):
         downloads = [
-            CKANPackagerStat(inserted_on=datetime(2018, 4, 1), resource_id=u'resource1', count=389),
-            CKANPackagerStat(inserted_on=datetime(2019, 1, 1), resource_id=u'resource2', count=910),
-            CKANPackagerStat(inserted_on=datetime(2011, 12, 1), resource_id=u'resource3', count=86),
-            CKANPackagerStat(inserted_on=datetime(2011, 12, 1), resource_id=u'blarp', count=None),
+            CKANPackagerStat(
+                inserted_on=datetime(2018, 4, 1), resource_id=u'resource1', count=389
+            ),
+            CKANPackagerStat(
+                inserted_on=datetime(2019, 1, 1), resource_id=u'resource2', count=910
+            ),
+            CKANPackagerStat(
+                inserted_on=datetime(2011, 12, 1), resource_id=u'resource3', count=86
+            ),
+            CKANPackagerStat(
+                inserted_on=datetime(2011, 12, 1), resource_id=u'blarp', count=None
+            ),
         ]
         for download in downloads:
             download.save()
@@ -386,16 +425,34 @@ class TestDownloadStatistics(object):
             u'options': {},
         }
         downloads = [
-            DatastoreDownload(resource_totals={u'resource1': 100, u'resource2': 32},
-                              created=datetime(2019, 1, 1), state=state_complete, error=None,
-                              **default_kwargs),
-            DatastoreDownload(resource_totals={u'resource1': 100, u'resource2': 32},
-                              created=datetime(2019, 3, 30), state=state_complete, error=None,
-                              **default_kwargs),
-            DatastoreDownload(resource_totals={u'resource1': 4}, created=datetime(2018, 5, 10),
-                              state=state_complete, error=u'error!', **default_kwargs),
-            DatastoreDownload(resource_totals={u'resource3': 189}, created=datetime(2018, 4, 14),
-                              state=state_zipping, error=None, **default_kwargs),
+            DatastoreDownload(
+                resource_totals={u'resource1': 100, u'resource2': 32},
+                created=datetime(2019, 1, 1),
+                state=state_complete,
+                error=None,
+                **default_kwargs
+            ),
+            DatastoreDownload(
+                resource_totals={u'resource1': 100, u'resource2': 32},
+                created=datetime(2019, 3, 30),
+                state=state_complete,
+                error=None,
+                **default_kwargs
+            ),
+            DatastoreDownload(
+                resource_totals={u'resource1': 4},
+                created=datetime(2018, 5, 10),
+                state=state_complete,
+                error=u'error!',
+                **default_kwargs
+            ),
+            DatastoreDownload(
+                resource_totals={u'resource3': 189},
+                created=datetime(2018, 4, 14),
+                state=state_zipping,
+                error=None,
+                **default_kwargs
+            ),
         ]
         for download in downloads:
             download.save()
@@ -407,5 +464,9 @@ class TestDownloadStatistics(object):
         calls = monthly_stats.add_all.call_args_list
         assert len(calls) == 2
         # only these two should come through, the others are either in error or not complete
-        assert call(datetime(2019, 1, 1), {u'resource1': 100, u'resource2': 32}) in calls
-        assert call(datetime(2019, 3, 30), {u'resource1': 100, u'resource2': 32}) in calls
+        assert (
+            call(datetime(2019, 1, 1), {u'resource1': 100, u'resource2': 32}) in calls
+        )
+        assert (
+            call(datetime(2019, 3, 30), {u'resource1': 100, u'resource2': 32}) in calls
+        )
