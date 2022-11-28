@@ -1,1 +1,76 @@
 # Changelog
+
+## v3.0.0 (2022-11-28)
+
+### Breaking Changes
+
+- ckan extensions now installed from PyPI. version numbers will need to be updated before pushing to main.
+
+### Fix
+
+- fix version number
+
+### Docs
+
+- add section delimiters and include-markdown
+
+### Style
+
+- apply formatting
+
+### Build System(s)
+
+- **requirements**: update minor versions of ckan extensions
+- set changelog generation to incremental
+- pin minor versions of dependencies
+- unpin ckanpackager and vds versions
+
+### CI System(s)
+
+- add cz-nhm dependency
+
+### Chores/Misc
+
+- use cz_nhm commitizen config
+- improve commitizen message template
+- standardise package files
+
+## v2.0.15 (2022-10-03)
+
+## v2.0.14 (2022-09-06)
+
+## v2.0.13 (2022-08-30)
+
+## v2.0.12 (2022-08-22)
+
+## v2.0.11 (2022-08-08)
+
+## v2.0.10 (2022-06-13)
+
+## v2.0.9 (2022-05-23)
+
+## v2.0.8 (2022-05-17)
+
+## v2.0.7 (2022-05-03)
+
+## v2.0.6 (2022-04-25)
+
+## v2.0.5 (2022-03-28)
+
+## v2.0.4 (2022-03-21)
+
+## v2.0.3 (2022-03-14)
+
+## v2.0.2 (2022-03-07)
+
+## v2.0.1 (2021-03-11)
+
+## v2.0.0 (2021-03-09)
+
+## v1.0.0-alpha (2019-07-23)
+
+## v0.0.3 (2019-04-08)
+
+## v0.0.2 (2018-06-28)
+
+## v0.0.1 (2017-11-08)
