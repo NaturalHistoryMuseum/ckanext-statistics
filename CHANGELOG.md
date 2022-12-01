@@ -1,5 +1,13 @@
 # Changelog
 
+## v3.0.1 (2022-12-01)
+
+### Docs
+
+- **readme**: format test section
+- **readme**: update installation steps
+- **readme**: update ckan patch version in header badge
+
 ## v3.0.0 (2022-11-28)
 
 ### Breaking Changes
