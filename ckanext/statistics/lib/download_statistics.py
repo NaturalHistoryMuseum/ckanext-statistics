@@ -12,10 +12,7 @@ import ckan.model as model
 import os
 from ckan.plugins import toolkit
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
-from ckanext.versioned_datastore.model.downloads import (
-    DatastoreDownload,
-    state_complete,
-)
+from ckanext.versioned_datastore.model.downloads import DownloadRequest
 from sqlalchemy import sql
 
 from ..lib.statistics import Statistics
@@ -259,12 +256,12 @@ class DownloadStatistics(Statistics):
 
         :param monthly_stats: a MonthlyStats object
         """
-        for download in (
-            model.Session.query(DatastoreDownload)
-            .filter(DatastoreDownload.state == state_complete)
-            .filter(DatastoreDownload.error.is_(None))
+        for download in model.Session.query(DownloadRequest).filter(
+            DownloadRequest.state == DownloadRequest.state_complete
         ):
-            monthly_stats.add_all(download.created, download.resource_totals)
+            monthly_stats.add_all(
+                download.created, download.core_record.resource_totals
+            )
 
     @staticmethod
     def add_backfill_stats(filename, monthly_stats):
