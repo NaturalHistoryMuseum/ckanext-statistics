@@ -19,11 +19,12 @@ classifiers = [
     "Programming Language :: Python :: 3.8"
 ]
 dependencies = [
-    "ckantools>=0.3.0",
+    "importlib-resources",
     "requests",
     "tqdm>=4.55.1",
-    "ckanext-ckanpackager>=2.2.0",
-    "ckanext-versioned-datastore>=3.7.0"
+    "ckanext-ckanpackager~=2.2.0",
+    "ckanext-versioned-datastore~=3.7.0",
+    "ckantools>=0.3.0"
 ]
 
 [project.optional-dependencies]
@@ -53,6 +54,10 @@ zip-safe = false
 
 [tool.setuptools.packages.find]
 exclude = ["tests", "docs"]
+
+[tool.setuptools.package-data]
+"ckanext.statistics.theme" = ["*", "**/*"]
+"ckanext.statistics.data" = ["*", "**/*"]
 
 [tool.commitizen]
 name = "cz_nhm"
