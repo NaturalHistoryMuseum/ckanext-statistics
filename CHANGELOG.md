@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.0.2 (2022-12-12)
+
+### Style
+
+- change quotes in setup.py to single quotes
+
+### Build System(s)
+
+- **requirements**: use compatible release specifier for extensions
+- include top-level data files
+- add package data
+
 ## v3.0.1 (2022-12-01)
 
 ### Docs
