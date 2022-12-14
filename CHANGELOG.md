@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.0.3 (2022-12-14)
+
+### Build System(s)
+
+- update minor version of vds
+
 ## v3.0.2 (2022-12-12)
 
 ### Style
