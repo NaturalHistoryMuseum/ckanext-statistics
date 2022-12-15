@@ -8,13 +8,13 @@
 import json
 from collections import OrderedDict, defaultdict
 
+from importlib_resources import files
+from sqlalchemy import sql
+
 import ckan.model as model
-import os
 from ckan.plugins import toolkit
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
 from ckanext.versioned_datastore.model.downloads import DownloadRequest
-from sqlalchemy import sql
-
 from ..lib.statistics import Statistics
 from ..logic.schema import statistics_downloads_schema
 from ..model.gbif_download import GBIFDownload
@@ -275,11 +275,8 @@ class DownloadStatistics(Statistics):
         if filename is None:
             return
 
-        backfill_file = os.path.join(
-            os.path.dirname(os.path.dirname(__file__)), 'data', filename
-        )
-        with open(backfill_file, 'r') as data:
-            backfill_data = json.load(data)
+        backfill_file = files('ckanext.statistics.data').joinpath(filename)
+        backfill_data = json.loads(backfill_file.read_text())
 
         for year in backfill_data:
             for month, stats in backfill_data[year].items():
