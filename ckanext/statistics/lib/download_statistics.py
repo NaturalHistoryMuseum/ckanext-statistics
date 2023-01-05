@@ -249,10 +249,7 @@ class DownloadStatistics(Statistics):
     def add_versioned_datastore_download_stats(monthly_stats):
         """
         Updates the given MonthlyStats object with the versioned datastore download
-        stats. Only "complete" downloads are counted. Note that downloads that error out
-        don't get the state of "complete", they get "failed", however to avoid creating
-        a subtle dependency on versioned datastore logic in a completely different
-        extension we check the error column is empty too.
+        stats. Only "complete" downloads are counted.
 
         :param monthly_stats: a MonthlyStats object
         """
