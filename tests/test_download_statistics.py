@@ -14,9 +14,9 @@ from ckanext.statistics.lib.download_statistics import DownloadStatistics, Month
 from ckanext.statistics.model.gbif_download import GBIFDownload, gbif_downloads_table
 from ckanext.versioned_datastore.model import stats, slugs, details, downloads
 from ckanext.versioned_datastore.model.downloads import (
-    DatastoreDownload,
-    state_complete,
-    state_zipping,
+    DownloadRequest,
+    CoreFileRecord,
+    DerivativeFileRecord,
 )
 from unittest.mock import MagicMock, call
 
@@ -306,7 +306,9 @@ def with_needed_tables(reset_db):
         stats.import_stats_table,
         slugs.datastore_slugs_table,
         details.datastore_resource_details_table,
-        downloads.datastore_downloads_table,
+        downloads.datastore_downloads_core_files_table,
+        downloads.datastore_downloads_derivative_files_table,
+        downloads.datastore_downloads_requests_table,
         ckanpackager_stats_table,
         gbif_downloads_table,
     ]
@@ -406,42 +408,65 @@ class TestDownloadStatistics(object):
         assert call(datetime(2011, 12, 1), 'blarp', 0) in calls
 
     def test_add_versioned_datastore_download_stats(self):
-        default_kwargs = {
-            'query_hash': 'abcd',
+
+        core_record_kwargs = {
             'query': {},
             'query_version': 'v12.4.9',
-            'resource_ids_and_versions': {},
             'total': 1,
-            'options': {},
+            'field_counts': {},
         }
+
+        core_record_1 = CoreFileRecord(
+            resource_ids_and_versions={'resource1': 1, 'resource2': 1},
+            query_hash='abcd',
+            resource_hash='abcd',
+            modified=datetime(2019, 1, 1),
+            resource_totals={'resource1': 100, 'resource2': 32},
+            **core_record_kwargs
+        )
+        core_record_1.save()
+
+        core_record_2 = CoreFileRecord(
+            resource_ids_and_versions={'resource1': 1},
+            query_hash='efgh',
+            resource_hash='efgh',
+            modified=datetime(2018, 5, 10),
+            resource_totals={'resource1': 4},
+            **core_record_kwargs
+        )
+        core_record_2.save()
+
+        core_record_3 = CoreFileRecord(
+            resource_ids_and_versions={'resource3': 1},
+            query_hash='ijkl',
+            resource_hash='ijkl',
+            modified=datetime(2018, 4, 14),
+            resource_totals={'resource3': 189},
+            **core_record_kwargs
+        )
+        core_record_3.save()
+
         downloads = [
-            DatastoreDownload(
-                resource_totals={'resource1': 100, 'resource2': 32},
+            DownloadRequest(
                 created=datetime(2019, 1, 1),
-                state=state_complete,
-                error=None,
-                **default_kwargs
+                state=DownloadRequest.state_complete,
+                core_id=core_record_1.id,
             ),
-            DatastoreDownload(
-                resource_totals={'resource1': 100, 'resource2': 32},
+            DownloadRequest(
                 created=datetime(2019, 3, 30),
-                state=state_complete,
-                error=None,
-                **default_kwargs
+                state=DownloadRequest.state_complete,
+                core_id=core_record_1.id,
             ),
-            DatastoreDownload(
-                resource_totals={'resource1': 4},
+            DownloadRequest(
                 created=datetime(2018, 5, 10),
-                state=state_complete,
-                error='error!',
-                **default_kwargs
+                state=DownloadRequest.state_failed,
+                message='error!',
+                core_id=core_record_2.id,
             ),
-            DatastoreDownload(
-                resource_totals={'resource3': 189},
+            DownloadRequest(
                 created=datetime(2018, 4, 14),
-                state=state_zipping,
-                error=None,
-                **default_kwargs
+                state=DownloadRequest.state_packaging,
+                core_id=core_record_3.id,
             ),
         ]
         for download in downloads:
