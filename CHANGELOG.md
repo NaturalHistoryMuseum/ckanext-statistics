@@ -1,5 +1,28 @@
 # Changelog
 
+## v3.1.0 (2023-01-30)
+
+### Fix
+
+- **downloads**: switch versioned-datastore class
+
+### Docs
+
+- remove outdated bit of docstring
+
+### Style
+
+- remove all the unicode string markers
+
+### Build System(s)
+
+- **docker**: use 'latest' tag for test docker image
+
+### Chores/Misc
+
+- bump vds version
+- merge in new changes from dev
+
 ## v3.0.3 (2022-12-14)
 
 ### Build System(s)
