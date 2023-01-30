@@ -14,10 +14,7 @@ from sqlalchemy import sql
 import ckan.model as model
 from ckan.plugins import toolkit
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
-from ckanext.versioned_datastore.model.downloads import (
-    DatastoreDownload,
-    state_complete,
-)
+from ckanext.versioned_datastore.model.downloads import DownloadRequest
 from ..lib.statistics import Statistics
 from ..logic.schema import statistics_downloads_schema
 from ..model.gbif_download import GBIFDownload
@@ -252,19 +249,16 @@ class DownloadStatistics(Statistics):
     def add_versioned_datastore_download_stats(monthly_stats):
         """
         Updates the given MonthlyStats object with the versioned datastore download
-        stats. Only "complete" downloads are counted. Note that downloads that error out
-        don't get the state of "complete", they get "failed", however to avoid creating
-        a subtle dependency on versioned datastore logic in a completely different
-        extension we check the error column is empty too.
+        stats. Only "complete" downloads are counted.
 
         :param monthly_stats: a MonthlyStats object
         """
-        for download in (
-            model.Session.query(DatastoreDownload)
-            .filter(DatastoreDownload.state == state_complete)
-            .filter(DatastoreDownload.error.is_(None))
+        for download in model.Session.query(DownloadRequest).filter(
+            DownloadRequest.state == DownloadRequest.state_complete
         ):
-            monthly_stats.add_all(download.created, download.resource_totals)
+            monthly_stats.add_all(
+                download.created, download.core_record.resource_totals
+            )
 
     @staticmethod
     def add_backfill_stats(filename, monthly_stats):
