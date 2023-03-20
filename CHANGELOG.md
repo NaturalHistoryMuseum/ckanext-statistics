@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.1.5 (2023-03-20)
+
+### Build System(s)
+
+- **deps**: bump vds version
+
 ## v3.1.4 (2023-02-20)
 
 ### Docs
