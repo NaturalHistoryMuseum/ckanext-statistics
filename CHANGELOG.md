@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.1.6 (2023-04-11)
+
+### Build System(s)
+
+- fix postgres not loading when running tests in docker
+
+### Chores/Misc
+
+- add action to sync branches when commits are pushed to main
+
 ## v3.1.5 (2023-03-20)
 
 ### Build System(s)
