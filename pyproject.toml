@@ -22,8 +22,8 @@ dependencies = [
     "importlib-resources",
     "requests",
     "tqdm>=4.55.1",
-    "ckanext-ckanpackager~=2.2.0",
-    "ckanext-versioned-datastore~=4.2.0",
+    "ckanext-ckanpackager~=3.0.0",
+    "ckanext-versioned-datastore~=5.0.0",
     "ckantools>=0.3.0"
 ]
 
