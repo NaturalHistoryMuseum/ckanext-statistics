@@ -1,5 +1,15 @@
 # Changelog
 
+## v3.1.8 (2023-07-18)
+
+### Tests
+
+- add nav slugs table
+
+### Build System(s)
+
+- update dependencies
+
 ## v3.1.7 (2023-07-17)
 
 ### Docs
