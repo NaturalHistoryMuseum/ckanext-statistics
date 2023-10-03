@@ -1,5 +1,20 @@
 # Changelog
 
+## v3.1.9 (2023-10-03)
+
+### Fix
+
+- update minor version of vds
+
+### Chores/Misc
+
+- add regex for version line in citation file
+- add citation.cff to list of files with version
+- add contributing guidelines
+- add code of conduct
+- add citation file
+- update support.md links
+
 ## v3.1.8 (2023-07-18)
 
 ### Tests
