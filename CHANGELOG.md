@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.1.10 (2023-10-05)
+
+### Build System(s)
+
+- change version specifiers for nhm ckan extensions
+
 ## v3.1.9 (2023-10-03)
 
 ### Fix
