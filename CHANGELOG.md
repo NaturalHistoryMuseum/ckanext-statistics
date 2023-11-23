@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.1.11 (2023-11-23)
+
+### Fix
+
+- add zero if count is None
+
 ## v3.1.10 (2023-10-05)
 
 ### Build System(s)
