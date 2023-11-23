@@ -101,7 +101,7 @@ class MonthlyStats(object):
                 resource_type = 'collections'
             else:
                 resource_type = 'research'
-            self.stats[month_year][resource_type]['records'] += count
+            self.stats[month_year][resource_type]['records'] += count or 0
 
         resources = set(resource_counts.keys())
         if self.collection_resource_ids.intersection(resources):
