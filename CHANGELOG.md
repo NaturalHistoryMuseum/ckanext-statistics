@@ -1,5 +1,11 @@
 # Changelog
 
+## v3.1.12 (2024-08-20)
+
+### Chores/Misc
+
+- add build section to read the docs config
+
 ## v3.1.11 (2023-11-23)
 
 ### Fix
