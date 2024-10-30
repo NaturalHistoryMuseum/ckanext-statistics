@@ -6,6 +6,7 @@
 
 
 import logging
+
 from ckan.lib.search import SearchIndexError
 from ckan.plugins import toolkit
 

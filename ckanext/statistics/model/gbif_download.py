@@ -5,8 +5,8 @@
 # Created by the Natural History Museum in London, UK
 
 
-from ckan.model import meta, DomainObject
-from sqlalchemy import Column, DateTime, Integer, func, Table, UnicodeText
+from ckan.model import DomainObject, meta
+from sqlalchemy import Column, DateTime, Integer, Table, UnicodeText, func
 
 gbif_downloads_table = Table(
     'gbif_downloads',

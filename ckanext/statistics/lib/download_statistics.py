@@ -8,13 +8,14 @@
 import json
 from collections import OrderedDict, defaultdict
 
+import ckan.model as model
+from ckan.plugins import toolkit
 from importlib_resources import files
 from sqlalchemy import sql
 
-import ckan.model as model
-from ckan.plugins import toolkit
 from ckanext.ckanpackager.model.stat import CKANPackagerStat
 from ckanext.versioned_datastore.model.downloads import DownloadRequest
+
 from ..lib.statistics import Statistics
 from ..logic.schema import statistics_downloads_schema
 from ..model.gbif_download import GBIFDownload
@@ -28,11 +29,11 @@ class MonthlyStats(object):
     """
 
     def __init__(self, month=None, year=None, resource_id=None):
-        '''
+        """
         :param month: if passed, only this month will be counted (defaults to None)
         :param year: if passed, only this year will be counted (defaults to None)
         :param resource_id: if passed, only this resource will be counted (defaults to None)
-        '''
+        """
         self.month = int(month) if month is not None else None
         self.year = int(year) if year is not None else None
         self.resource_id = resource_id
@@ -117,8 +118,8 @@ class MonthlyStats(object):
 
         :param month: the month
         :param year: the year
-        :param stats: the stats in a dict, the format of this dict must match a month/year entry in
-                      the self.stats dict
+        :param stats: the stats in a dict, the format of this dict must match a
+            month/year entry in the self.stats dict
         """
         if self.month is not None and self.month != int(month):
             return
@@ -158,7 +159,7 @@ class MonthlyStats(object):
         """
         Return an OrderedDict of count stats in ascending chronological order.
 
-        :return: an OrderedDict
+        :returns: an OrderedDict
         """
         return OrderedDict(
             sorted(

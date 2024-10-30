@@ -4,7 +4,7 @@ from ckan import model
 from ckan.plugins import toolkit
 from tqdm import tqdm
 
-from .model.gbif_download import gbif_downloads_table, GBIFDownload
+from .model.gbif_download import GBIFDownload, gbif_downloads_table
 
 
 def get_commands():
@@ -79,7 +79,7 @@ def get_gbif_stats(dataset_uuid, limit=100):
 
     :param dataset_uuid: the dataset uuid to get stats records for
     :param limit: the number of records to retrieve at once (default: 100)
-    :return: yields dicts
+    :returns: yields dicts
     """
     offset = 0
     url = f'https://api.gbif.org/v1/occurrence/download/dataset/{dataset_uuid}'
