@@ -7,18 +7,18 @@
 
 from collections import OrderedDict
 from datetime import datetime
+from unittest.mock import MagicMock, call
 
 import pytest
+
 from ckanext.ckanpackager.model.stat import CKANPackagerStat, ckanpackager_stats_table
 from ckanext.statistics.lib.download_statistics import DownloadStatistics, MonthlyStats
 from ckanext.statistics.model.gbif_download import GBIFDownload, gbif_downloads_table
-from ckanext.versioned_datastore.model import stats, slugs, details, downloads
+from ckanext.versioned_datastore.model import details, downloads, slugs, stats
 from ckanext.versioned_datastore.model.downloads import (
-    DownloadRequest,
     CoreFileRecord,
-    DerivativeFileRecord,
+    DownloadRequest,
 )
-from unittest.mock import MagicMock, call
 
 
 class TestMonthlyStats(object):
@@ -409,7 +409,6 @@ class TestDownloadStatistics(object):
         assert call(datetime(2011, 12, 1), 'blarp', 0) in calls
 
     def test_add_versioned_datastore_download_stats(self):
-
         core_record_kwargs = {
             'query': {},
             'query_version': 'v12.4.9',
@@ -423,7 +422,7 @@ class TestDownloadStatistics(object):
             resource_hash='abcd',
             modified=datetime(2019, 1, 1),
             resource_totals={'resource1': 100, 'resource2': 32},
-            **core_record_kwargs
+            **core_record_kwargs,
         )
         core_record_1.save()
 
@@ -433,7 +432,7 @@ class TestDownloadStatistics(object):
             resource_hash='efgh',
             modified=datetime(2018, 5, 10),
             resource_totals={'resource1': 4},
-            **core_record_kwargs
+            **core_record_kwargs,
         )
         core_record_2.save()
 
@@ -443,7 +442,7 @@ class TestDownloadStatistics(object):
             resource_hash='ijkl',
             modified=datetime(2018, 4, 14),
             resource_totals={'resource3': 189},
-            **core_record_kwargs
+            **core_record_kwargs,
         )
         core_record_3.save()
 

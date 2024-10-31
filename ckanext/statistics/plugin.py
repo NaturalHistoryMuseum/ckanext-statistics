@@ -8,6 +8,7 @@
 from ckan.plugins import SingletonPlugin, implements, interfaces
 
 from ckanext.statistics.logic.action import dataset_statistics, download_statistics
+
 from . import cli
 
 
