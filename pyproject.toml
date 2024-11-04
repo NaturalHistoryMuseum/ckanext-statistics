@@ -24,7 +24,7 @@ dependencies = [
     "tqdm>=4.55.1",
     "ckanext-ckanpackager>=3.0.0",
     "ckanext-versioned-datastore>=5.1.0",
-    "ckantools>=0.3.0"
+    "ckantools>=0.4.1"
 ]
 
 [project.optional-dependencies]
@@ -56,8 +56,8 @@ zip-safe = false
 exclude = ["tests", "docs"]
 
 [tool.setuptools.package-data]
-"ckanext.statistics.theme" = ["*", "**/*"]
 "ckanext.statistics.data" = ["*", "**/*"]
+"ckanext.statistics.theme" = ["*", "**/*"]
 
 [tool.commitizen]
 name = "cz_nhm"
@@ -70,9 +70,8 @@ version_files = [
     "CITATION.cff:^version"
 ]
 
-[tool.black]
-line-length = 88
-skip_string_normalization = true
+[tool.ruff.format]
+quote-style = "single"
 
 [tool.pylint]
 max-line-length = 88
