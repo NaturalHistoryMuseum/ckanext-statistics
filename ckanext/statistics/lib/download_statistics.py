@@ -13,7 +13,7 @@ from ckan.plugins import toolkit
 from importlib_resources import files
 from sqlalchemy import sql
 
-from ckanext.ckanpackager.model.stat import CKANPackagerStat
+from ckanext.statistics.model.ckanpackager import CKANPackagerStat
 from ckanext.versioned_datastore.model.downloads import DownloadRequest
 
 from ..lib.statistics import Statistics
