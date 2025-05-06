@@ -322,7 +322,7 @@ def with_needed_tables(reset_db):
             table.create()
 
 
-@pytest.mark.ckan_config('ckan.plugins', 'statistics versioned_datastore ckanpackager')
+@pytest.mark.ckan_config('ckan.plugins', 'statistics versioned_datastore')
 @pytest.mark.usefixtures('with_needed_tables', 'with_plugins')
 @pytest.mark.filterwarnings('ignore::sqlalchemy.exc.SADeprecationWarning')
 class TestDownloadStatistics(object):
