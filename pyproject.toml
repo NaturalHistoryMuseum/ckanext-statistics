@@ -1,6 +1,6 @@
 [project]
 name = "ckanext-statistics"
-version = "3.1.13"
+version = "3.1.14"
 description = "A CKAN extension for accessing instance statistics."
 readme = "README.md"
 requires-python = ">=3.6"
@@ -60,7 +60,7 @@ exclude = ["tests", "docs"]
 
 [tool.commitizen]
 name = "cz_nhm"
-version = "3.1.13"
+version = "3.1.14"
 tag_format = "v$version"
 update_changelog_on_bump = true
 changelog_incremental = true

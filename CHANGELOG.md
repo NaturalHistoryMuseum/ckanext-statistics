@@ -1,5 +1,20 @@
 # Changelog
 
+## v3.1.14 (2025-05-06)
+
+### Fix
+
+- remove python1 reference in shebang
+- catch validation errors when counting records
+
+### Refactor
+
+- remove dependency on ckanext-ckanpackager by copying its model
+
+### Tests
+
+- fix tests by removing ckanpackager instantiation
+
 ## v3.1.13 (2024-11-04)
 
 ### Docs
