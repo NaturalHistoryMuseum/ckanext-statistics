@@ -11,8 +11,11 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from ckanext.ckanpackager.model.stat import CKANPackagerStat, ckanpackager_stats_table
 from ckanext.statistics.lib.download_statistics import DownloadStatistics, MonthlyStats
+from ckanext.statistics.model.ckanpackager import (
+    CKANPackagerStat,
+    ckanpackager_stats_table,
+)
 from ckanext.statistics.model.gbif_download import GBIFDownload, gbif_downloads_table
 from ckanext.versioned_datastore.model import details, downloads, slugs, stats
 from ckanext.versioned_datastore.model.downloads import (
