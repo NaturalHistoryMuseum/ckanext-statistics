@@ -73,8 +73,13 @@ class DatasetStatistics(Statistics):
                                 search = toolkit.get_action('datastore_search')(
                                     {}, {'resource_id': resource['id'], 'limit': 0}
                                 )
-                            except (toolkit.ObjectNotFound, SearchIndexError):
-                                # not every file is ingested into the datastore, ignore these errors
+                            except (
+                                toolkit.ObjectNotFound,
+                                SearchIndexError,
+                                toolkit.ValidationError,
+                            ):
+                                # not every file is ingested into the datastore, ignore
+                                # these errors
                                 continue
 
                             resources.append(

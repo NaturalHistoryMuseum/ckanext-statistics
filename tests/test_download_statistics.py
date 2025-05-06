@@ -11,8 +11,11 @@ from unittest.mock import MagicMock, call
 
 import pytest
 
-from ckanext.ckanpackager.model.stat import CKANPackagerStat, ckanpackager_stats_table
 from ckanext.statistics.lib.download_statistics import DownloadStatistics, MonthlyStats
+from ckanext.statistics.model.ckanpackager import (
+    CKANPackagerStat,
+    ckanpackager_stats_table,
+)
 from ckanext.statistics.model.gbif_download import GBIFDownload, gbif_downloads_table
 from ckanext.versioned_datastore.model import details, downloads, slugs, stats
 from ckanext.versioned_datastore.model.downloads import (
@@ -319,7 +322,7 @@ def with_needed_tables(reset_db):
             table.create()
 
 
-@pytest.mark.ckan_config('ckan.plugins', 'statistics versioned_datastore ckanpackager')
+@pytest.mark.ckan_config('ckan.plugins', 'statistics versioned_datastore')
 @pytest.mark.usefixtures('with_needed_tables', 'with_plugins')
 @pytest.mark.filterwarnings('ignore::sqlalchemy.exc.SADeprecationWarning')
 class TestDownloadStatistics(object):
