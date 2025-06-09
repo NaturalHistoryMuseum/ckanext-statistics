@@ -1,5 +1,17 @@
 # Changelog
 
+## v3.1.15 (2025-06-09)
+
+### Build System(s)
+
+- update ckantools
+
+### CI System(s)
+
+- set ruff target py version, add more ignores - avoid using fixes that don't work for python 3.8 (our current version) - ignore recommended ruff formatter conflicts - ignore more docstring rules
+- remove pylint, add ruff lint rules Primarily the defaults plus pydocstyle and isort.
+- update pre-commit repo versions
+
 ## v3.1.14 (2025-05-06)
 
 ### Fix
