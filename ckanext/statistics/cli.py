@@ -16,18 +16,6 @@ def statistics():
     pass
 
 
-@statistics.command(name='initdb')
-def init_db():
-    """
-    Initialises the gbif_downloads table if it doesn't exist.
-    """
-    if not gbif_downloads_table.exists():
-        gbif_downloads_table.create()
-        click.secho('Created gbif_downloads table', fg='green')
-    else:
-        click.secho('Table gbif_downloads already exists', fg='green')
-
-
 @statistics.command(name='update-gbif-stats')
 def update_gbif_stats():
     """
@@ -35,8 +23,7 @@ def update_gbif_stats():
     """
     # make sure the table we need exists first
     if not gbif_downloads_table.exists():
-        gbif_downloads_table.create()
-        click.secho('Created gbif_downloads table', fg='green')
+        raise Exception('gbif_downloads table does not exist')
 
     last_download = (
         model.Session.query(GBIFDownload).order_by(GBIFDownload.date.desc()).first()

@@ -68,6 +68,11 @@ Installing from a `pyproject.toml` in editable mode (i.e. `pip install -e`) requ
    ckan.plugins = ... statistics
    ```
 
+2. Upgrade the database to create the tables:
+   ```shell
+   ckan -c $CONFIG_FILE db upgrade -p statistics
+   ```
+
 <!--installation-end-->
 
 # Configuration
