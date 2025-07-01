@@ -28,8 +28,8 @@ def get_gbif_stats(year=None, month=None):
     for dataset_key in dataset_keys:
         params = {'datasetKey': dataset_key, 'limit': 20, 'offset': 0}
         if year and month:
-            params['fromDate'] = f'{year}-{month}'
-            params['toDate'] = f'{year}-{month}'
+            params['fromDate'] = f'{year}-{month:02}'
+            params['toDate'] = f'{year}-{month:02}'
         elif year:
             params['fromDate'] = f'{year}-01'
             params['toDate'] = f'{year}-12'
