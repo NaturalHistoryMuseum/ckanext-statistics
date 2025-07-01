@@ -7,7 +7,7 @@
 
 from collections import OrderedDict
 from datetime import datetime
-from unittest.mock import MagicMock, call
+from unittest.mock import MagicMock, call, patch
 
 import pytest
 
@@ -16,7 +16,6 @@ from ckanext.statistics.model.ckanpackager import (
     CKANPackagerStat,
     ckanpackager_stats_table,
 )
-from ckanext.statistics.model.gbif_download import GBIFDownload, gbif_downloads_table
 from ckanext.versioned_datastore.model import details, downloads, slugs, stats
 from ckanext.versioned_datastore.model.downloads import (
     CoreFileRecord,
@@ -314,7 +313,6 @@ def with_needed_tables(reset_db):
         downloads.datastore_downloads_derivative_files_table,
         downloads.datastore_downloads_requests_table,
         ckanpackager_stats_table,
-        gbif_downloads_table,
     ]
     # create the tables if they don't exist
     for table in tables:
@@ -357,18 +355,14 @@ class TestDownloadStatistics(object):
         assert dl_stats.add_backfill_stats.call_count == 0
         assert dl_stats.add_gbif_stats.call_count == 0
 
-    def test_add_gbif_stats(self):
-        downloads = [
-            GBIFDownload(doi='doi1', date=datetime(2019, 8, 22), count=18),
-            GBIFDownload(doi='doi2', date=datetime(2019, 8, 17), count=3),
-            GBIFDownload(doi='doi3', date=datetime(2018, 8, 30), count=15),
-            GBIFDownload(doi='doi4', date=datetime(2018, 8, 21), count=289),
-            GBIFDownload(doi='doi5', date=datetime(2019, 2, 11), count=490),
-            GBIFDownload(doi='doi6', date=datetime(2019, 2, 5), count=1),
-            GBIFDownload(doi='doi7', date=datetime(2013, 1, 1), count=29000),
+    @patch('ckanext.statistics.lib.download_statistics.get_gbif_stats')
+    def test_add_gbif_stats(self, mock_get_gbif_stats):
+        mock_get_gbif_stats.return_value = [
+            {'year': 2010, 'month': 1, 'records': 100, 'events': 2},
+            {'year': 2015, 'month': 2, 'records': 150, 'events': 3},
+            {'year': 2020, 'month': 3, 'records': 20, 'events': 2},
+            {'year': 2025, 'month': 4, 'records': 29000, 'events': 15},
         ]
-        for download in downloads:
-            download.save()
 
         dl_stats = DownloadStatistics(MagicMock(), MagicMock())
         monthly_stats = MagicMock()
@@ -376,10 +370,10 @@ class TestDownloadStatistics(object):
 
         calls = monthly_stats.update_from_gbif.call_args_list
         assert len(calls) == 4
-        assert call(1, 2013, 29000, 1) in calls
-        assert call(8, 2018, 15 + 289, 2) in calls
-        assert call(2, 2019, 490 + 1, 2) in calls
-        assert call(8, 2019, 18 + 3, 2) in calls
+        assert call(1, 2010, 100, 2) in calls
+        assert call(2, 2015, 150, 3) in calls
+        assert call(3, 2020, 20, 2) in calls
+        assert call(4, 2025, 29000, 15) in calls
 
     def test_add_ckanpackager_stats(self):
         downloads = [
