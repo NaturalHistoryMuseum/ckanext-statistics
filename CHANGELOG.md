@@ -1,5 +1,34 @@
 # Changelog
 
+## v4.0.0 (2025-07-08)
+
+### Breaking Changes
+
+- remove obsolete gbif download table model
+- retrieve gbif download stats directly from their api
+
+### Feature
+
+- **gbif**: retrieve gbif download stats directly from their api
+
+### Fix
+
+- zero-pad month in gbif param
+
+### Refactor
+
+- **gbif**: remove obsolete gbif download table model
+- use migration scripts to manage database
+
+### Docs
+
+- remove commands from readme
+- update configuration options in readme
+
+### Tests
+
+- fix tests for gbif stat updates
+
 ## v3.1.15 (2025-06-09)
 
 ### Build System(s)
