@@ -11,14 +11,13 @@ from collections import OrderedDict, defaultdict
 import ckan.model as model
 from ckan.plugins import toolkit
 from importlib_resources import files
-from sqlalchemy import sql
 
 from ckanext.statistics.model.ckanpackager import CKANPackagerStat
 from ckanext.versioned_datastore.model.downloads import DownloadRequest
 
+from ..lib.gbif_api import get_gbif_stats
 from ..lib.statistics import Statistics
 from ..logic.schema import statistics_downloads_schema
-from ..model.gbif_download import GBIFDownload
 
 backfill_filename = 'data-portal-backfill.json'
 
@@ -206,24 +205,11 @@ class DownloadStatistics(Statistics):
         :param year: (optional, default: None)
         :param month: (optional, default: None)
         """
-        year_part = sql.func.date_part('year', GBIFDownload.date).label('year')
-        month_part = sql.func.date_part('month', GBIFDownload.date).label('month')
 
-        rows = model.Session.query(
-            month_part,
-            year_part,
-            sql.func.sum(GBIFDownload.count).label('records'),
-            sql.func.count().label('download_events'),
-        ).group_by(year_part, month_part)
-
-        if year:
-            rows = rows.filter(sql.extract('year', GBIFDownload.date) == year)
-        if month:
-            rows = rows.filter(sql.extract('month', GBIFDownload.date) == month)
-
-        for row in rows:
+        gbif_stats = get_gbif_stats(year, month)
+        for result in gbif_stats:
             monthly_stats.update_from_gbif(
-                row.month, row.year, row.records, row.download_events
+                result['month'], result['year'], result['records'], result['events']
             )
 
     @staticmethod

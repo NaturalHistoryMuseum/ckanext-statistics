@@ -68,12 +68,32 @@ Installing from a `pyproject.toml` in editable mode (i.e. `pip install -e`) requ
    ckan.plugins = ... statistics
    ```
 
+2. Upgrade the database to create the tables:
+   ```shell
+   ckan -c $CONFIG_FILE db upgrade -p statistics
+   ```
+
 <!--installation-end-->
 
 # Configuration
 
 <!--configuration-start-->
-These are no configuration options for this extension.
+These are the options that can be specified in your .ini config file.
+
+| Name                                   | Description                                                                                                           |
+|----------------------------------------|-----------------------------------------------------------------------------------------------------------------------|
+| `ckanext.statistics.resource_ids`      | IDs of collection resources (space separated).                                                                        |
+| `ckanext.statistics.gbif_dataset_keys` | GBIF dataset keys (space separated). If not specified, tries `ckanext.gbif.dataset_key`. Defaults to an empty string. |
+
+## Cache settings
+
+These settings are used to directly configure a [beaker cache region](https://beaker.readthedocs.io/en/latest/modules/cache.html) named `ckanext_statistics`. Please see their [configuration docs](https://beaker.readthedocs.io/en/latest/configuration.html) for more information and additional options.
+
+| Name                              | Description                                       | Example                    |
+|-----------------------------------|---------------------------------------------------|----------------------------|
+| `ckanext.statistics.cache.type`   | Cache backend.                                    | `ext:redis`                |
+| `ckanext.statistics.cache.url`    | URL for the backend.                              | `redis://localhost:6379/0` |
+| `ckanext.statistics.cache.expire` | Time until the cache content expires, in seconds. | `3600`                     |
 
 <!--configuration-end-->
 
@@ -117,20 +137,6 @@ toolkit.get_action('dataset_statistics')(
     data_dict
 )
 ```
-
-## Commands
-
-### `statistics`
-
-1. `initdb`: initialise the database model
-   ```bash
-    ckan -c $CONFIG_FILE statistics initdb
-   ```
-
-2. `gbif`: retrieve download statistics from [GBIF](https://gbif.org).
-    ```bash
-    ckan -c $CONFIG_FILE statistics gbif
-    ```
 
 <!--usage-end-->
 
