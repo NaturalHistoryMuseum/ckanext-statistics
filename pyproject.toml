@@ -57,6 +57,7 @@ exclude = ["tests", "docs"]
 [tool.setuptools.package-data]
 "ckanext.statistics.data" = ["*", "**/*"]
 "ckanext.statistics.theme" = ["*", "**/*"]
+"ckanext.statistics.migration" = ["*", "**/*"]
 
 [tool.commitizen]
 name = "cz_nhm"
