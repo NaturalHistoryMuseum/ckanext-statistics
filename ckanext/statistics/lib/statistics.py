@@ -7,8 +7,6 @@
 
 import abc
 
-from ckan.plugins import toolkit
-
 
 class Statistics(object):
     """
@@ -21,12 +19,6 @@ class Statistics(object):
     def __init__(self, context, params):
         self.context = context
         self.params = params
-
-    def validate(self):
-        schema = self.context.get('schema', self.schema)
-        self.params, errors = toolkit.navl_validate(self.params, schema, self.context)
-        if errors:
-            raise toolkit.ValidationError(errors)
 
     @abc.abstractproperty
     def schema(self):

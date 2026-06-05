@@ -7,8 +7,14 @@
 
 from beaker.cache import cache_regions
 from ckan.plugins import SingletonPlugin, implements, interfaces
+from ckantools.loaders import create_actions, create_auth
 
-from ckanext.statistics.logic.action import dataset_statistics, download_statistics
+from ckanext.statistics.logic import (
+    action as statistics_actions,
+)
+from ckanext.statistics.logic import (
+    auth as statistics_auth,
+)
 
 
 class StatisticsPlugin(SingletonPlugin):
@@ -17,15 +23,16 @@ class StatisticsPlugin(SingletonPlugin):
     """
 
     implements(interfaces.IActions)
+    implements(interfaces.IAuthFunctions)
     implements(interfaces.IConfigurable)
 
     # IActions
-    @staticmethod
-    def get_actions():
-        return {
-            'download_statistics': download_statistics,
-            'dataset_statistics': dataset_statistics,
-        }
+    def get_actions(self):
+        return create_actions(statistics_actions)
+
+    # IAuthFunctions
+    def get_auth_functions(self):
+        return create_auth(statistics_auth)
 
     # IConfigurable
     def configure(self, config):
