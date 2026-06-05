@@ -11,7 +11,6 @@ from ckan.lib.search import SearchIndexError
 from ckan.plugins import toolkit
 
 from ckanext.statistics.lib.statistics import Statistics
-from ckanext.statistics.logic.schema import statistics_dataset_schema
 
 log = logging.getLogger(__name__)
 
@@ -21,9 +20,7 @@ class DatasetStatistics(Statistics):
     Retrieve dataset statistics.
     """
 
-    schema = statistics_dataset_schema()
-
-    def _get_statistics(self, resource_id=None):
+    def get(self, resource_id=None):
         """
         Fetch the statistics.
 
@@ -31,17 +28,12 @@ class DatasetStatistics(Statistics):
                             - None retrieves stats for all resources
                             (optional, default: None)
         """
-        context = {
-            'user': toolkit.c.user or toolkit.c.author,
-            'auth_user_obj': toolkit.c.userobj,
-        }
         if resource_id:
             return self._get_resource_statistics(resource_id)
         else:
-            return self._get_all_resources_statistics(context)
+            return self._get_all_resources_statistics()
 
-    @staticmethod
-    def _get_all_resources_statistics(context):
+    def _get_all_resources_statistics(self):
         """
         Get stats for all resources.
 
@@ -53,7 +45,7 @@ class DatasetStatistics(Statistics):
 
         while True:
             packages = toolkit.get_action('current_package_list_with_resources')(
-                context, package_data_dict
+                self.context, package_data_dict
             )
             if not packages:
                 # we've hit all the packages that are available

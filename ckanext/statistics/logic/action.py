@@ -16,18 +16,18 @@ dataset_stats_helptext = 'Dataset statistics.'
 
 
 @action(schema.statistics_downloads_schema(), download_stats_helptext, get=True)
-def download_statistics(context, data_dict):
+def download_statistics(context, year=None, month=None, resource_id=None):
     """
     Data Portal download stats.
     """
-    statistics = DownloadStatistics(context, data_dict)
-    return statistics.get()
+    statistics = DownloadStatistics(context)
+    return statistics.get(year=year, month=month, resource_id=resource_id)
 
 
 @action(schema.statistics_dataset_schema(), dataset_stats_helptext, get=True)
-def dataset_statistics(context, data_dict):
+def dataset_statistics(context, resource_id=None):
     """
     Data Portal dataset stats.
     """
-    statistics = DatasetStatistics(context, data_dict)
-    return statistics.get()
+    statistics = DatasetStatistics(context)
+    return statistics.get(resource_id=resource_id)

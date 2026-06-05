@@ -17,7 +17,6 @@ from ckanext.versioned_datastore.model.downloads import DownloadRequest
 
 from ..lib.gbif_api import get_gbif_stats
 from ..lib.statistics import Statistics
-from ..logic.schema import statistics_downloads_schema
 
 backfill_filename = 'data-portal-backfill.json'
 
@@ -173,9 +172,7 @@ class DownloadStatistics(Statistics):
     Class used to implement the download statistics action.
     """
 
-    schema = statistics_downloads_schema()
-
-    def _get_statistics(self, year=None, month=None, resource_id=None):
+    def get(self, year=None, month=None, resource_id=None):
         """
         Fetch the statistics.
 
