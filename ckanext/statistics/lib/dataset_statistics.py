@@ -7,7 +7,6 @@
 
 import logging
 
-from ckan.lib.search import SearchIndexError
 from ckan.plugins import toolkit
 
 from ckanext.statistics.lib.statistics import Statistics
@@ -36,16 +35,15 @@ class DatasetStatistics(Statistics):
     def _get_all_resources_statistics(self):
         """
         Get stats for all resources.
-
-        :param context: the current context
         """
         total = 0
         resources = []
-        package_data_dict = {'limit': 50, 'offset': 0}
+        package_data_dict = {'limit': 100, 'offset': 0}
 
         while True:
+            # only check public packages
             packages = toolkit.get_action('current_package_list_with_resources')(
-                self.context, package_data_dict
+                {'ignore_auth': False, 'user': None}, package_data_dict
             )
             if not packages:
                 # we've hit all the packages that are available
@@ -54,36 +52,27 @@ class DatasetStatistics(Statistics):
                 package_data_dict['offset'] += len(packages)
 
                 for package in packages:
-                    # only include resources from packages that are public and active
-                    if package['private'] or package['state'] != 'active':
-                        continue
                     for resource in package.get('resources', []):
-                        if resource['state'] != 'active':
-                            continue
-                        if resource.get('datastore_active', False):
-                            try:
-                                search = toolkit.get_action('datastore_search')(
-                                    {}, {'resource_id': resource['id'], 'limit': 0}
-                                )
-                            except (
-                                toolkit.ObjectNotFound,
-                                SearchIndexError,
-                                toolkit.ValidationError,
-                            ):
-                                # not every file is ingested into the datastore, ignore
-                                # these errors
-                                continue
-
-                            resources.append(
-                                {
-                                    'pkg_name': package['name'],
-                                    'pkg_title': package['title'],
-                                    'name': resource['name'],
-                                    'id': resource['id'],
-                                    'total': search.get('total', 0),
-                                }
+                        try:
+                            # only check public resources
+                            resource_count = toolkit.get_action('vds_basic_count')(
+                                {'ignore_auth': False, 'user': None},
+                                {'resource_id': resource['id']},
                             )
-                            total += search.get('total', 0)
+                        except toolkit.ValidationError:
+                            # anything that isn't a public datastore resource will error
+                            continue
+
+                        resources.append(
+                            {
+                                'pkg_name': package['name'],
+                                'pkg_title': package['title'],
+                                'name': resource['name'],
+                                'id': resource['id'],
+                                'total': resource_count,
+                            }
+                        )
+                        total += resource_count
 
         return {'total': total, 'resources': resources}
 
