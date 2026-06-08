@@ -5,8 +5,8 @@
 # Created by the Natural History Museum in London, UK
 
 
-from beaker.cache import cache_regions
 from ckan.plugins import SingletonPlugin, implements, interfaces
+from ckantools.cache import configure_cache
 from ckantools.loaders import create_actions, create_auth
 
 from ckanext.statistics.logic import (
@@ -37,8 +37,4 @@ class StatisticsPlugin(SingletonPlugin):
     # IConfigurable
     def configure(self, config):
         # configure cache
-        options = {}
-        for k, v in config.items():
-            if k.startswith('ckanext.statistics.cache.'):
-                options[k.split('.')[-1]] = v
-        cache_regions.update({'ckanext_statistics': options})
+        configure_cache(config, 'statistics', 'ckanext_statistics')
