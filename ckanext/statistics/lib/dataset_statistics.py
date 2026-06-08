@@ -7,6 +7,7 @@
 
 import logging
 
+from beaker.cache import cache_region
 from ckan.plugins import toolkit
 
 from ckanext.statistics.lib.statistics import Statistics
@@ -32,6 +33,7 @@ class DatasetStatistics(Statistics):
         else:
             return self._get_all_resources_statistics()
 
+    @cache_region('ckanext_statistics', 'dataset_statistics_all')
     def _get_all_resources_statistics(self):
         """
         Get stats for all resources.
@@ -76,6 +78,7 @@ class DatasetStatistics(Statistics):
 
         return {'total': total, 'resources': resources}
 
+    @cache_region('ckanext_statistics', 'dataset_statistics_one')
     def _get_resource_statistics(self, resource_id):
         """
         Get stats for an individual resource. Allows searching private datasets.
