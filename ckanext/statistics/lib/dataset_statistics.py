@@ -78,13 +78,16 @@ class DatasetStatistics(Statistics):
 
     def _get_resource_statistics(self, resource_id):
         """
-        Get stats for an individual resource.
+        Get stats for an individual resource. Allows searching private datasets.
 
         :param resource_id: the ID of the resource to retrieve stats for
         """
         try:
             resource = toolkit.get_action('resource_show')(
                 self.context, {'id': resource_id}
+            )
+            package = toolkit.get_action('package_show')(
+                self.context, {'id': resource['package_id']}
             )
         except toolkit.ObjectNotFound:
             toolkit.abort(404, toolkit._('Resource not found'))
@@ -93,9 +96,21 @@ class DatasetStatistics(Statistics):
                 401, toolkit._(f'Unauthorized to read resource {resource_id}')
             )
         else:
-            # TODO - Add break down over time for SOLR Datasets
-            search = toolkit.get_action('datastore_search')(
-                {}, {'resource_id': resource_id, 'limit': 1}
+            # this will raise a validation error if the resource is not in the datastore
+            resource_count = toolkit.get_action('vds_basic_count')(
+                self.context,
+                {'resource_id': resource_id},
             )
 
-            return {'resource': resource, 'total': search['total']}
+            return {
+                'total': resource_count,
+                'resources': [
+                    {
+                        'pkg_name': package['name'],
+                        'pkg_title': package['title'],
+                        'name': resource['name'],
+                        'id': resource['id'],
+                        'total': resource_count,
+                    }
+                ],
+            }
