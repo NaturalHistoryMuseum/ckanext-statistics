@@ -5,11 +5,14 @@
 # Created by the Natural History Museum in London, UK
 
 
+import calendar
 import json
 from collections import OrderedDict, defaultdict
+from datetime import datetime as dt
 from typing import Optional, Set
 
 import ckan.model as model
+from beaker.cache import cache_region, region_invalidate
 from ckan.plugins import toolkit
 from importlib_resources import files
 from sqlalchemy import sql
@@ -41,16 +44,62 @@ class DownloadStatistics(Statistics):
         :param resource_id: get stats for this resource only (optional, default: None)
         :returns: dict of stats
         """
-        sources = [
-            self._get_ckanpackager(year, month, resource_id),
-            self._get_vds_download(year, month, resource_id),
-        ]
+        today = dt.now()
+        current_key = self._date_format(today)
+        query_start = dt(year=year or 1, month=month or 1, day=1)
+        query_end = dt(
+            year=year or today.year,
+            month=month or 12,
+            day=calendar.monthrange(year or today.year, month or 12)[1],
+        )
 
-        # if no resource_id has been specified we can add the backfill and gbif stats as
-        # they aren't filterable by resource ID
-        if not resource_id:
-            sources.append(self._get_gbif(year, month))
-            sources.append(self._get_backfill(backfill_filename, year, month))
+        sources = []
+
+        # if we're getting anything other than just the current month, get that first
+        current_only = year == today.year and (month == today.month or today.month == 1)
+        if not current_only:
+            sources.append(self._get_ckanpackager(year, month, resource_id))
+            sources.append(self._get_vds_download(year, month, resource_id))
+
+            # if no resource_id has been specified we can add the backfill and gbif
+            # stats as they aren't filterable by resource ID
+            if not resource_id:
+                sources.append(self._get_gbif(year, month))
+                sources.append(self._get_backfill(backfill_filename, year, month))
+
+        # if current month is included
+        if query_start <= today <= query_end:
+            # delete current month from sources
+            for source in sources:
+                try:
+                    del source[current_key]
+                except KeyError:
+                    continue
+
+            # invalidate cache for current month
+            ym = [today.year, today.month]
+            to_invalidate = [
+                (self._get_ckanpackager, [*ym, resource_id]),
+                (self._get_vds_download, [*ym, resource_id]),
+                (self._get_gbif, ym),
+                (self._get_backfill, [backfill_filename, *ym]),
+            ]
+            for func, func_args in to_invalidate:
+                region_invalidate(
+                    func,
+                    'statistics_long',
+                    func.__name__.replace('_get', 'dl_stats'),
+                    *func_args,
+                )
+
+            # get some stats for the current month
+            sources.append(self._get_ckanpackager(today.year, today.month, resource_id))
+            sources.append(self._get_vds_download(today.year, today.month, resource_id))
+            if not resource_id:
+                sources.append(self._get_gbif(today.year, today.month))
+                sources.append(
+                    self._get_backfill(backfill_filename, today.year, today.month)
+                )
 
         def _combine(*items):
             not_null_items = [i for i in items if i is not None]
@@ -131,6 +180,7 @@ class DownloadStatistics(Statistics):
             },
         }
 
+    @cache_region('statistics_long', 'dl_stats_ckanpackager')
     def _get_ckanpackager(self, year=None, month=None, resource_id=None):
         """
         Gets ckanpackager download stats.
@@ -158,6 +208,7 @@ class DownloadStatistics(Statistics):
             stats_dict[key][resource_type]['download_events'] += 1
         return dict(stats_dict)
 
+    @cache_region('statistics_long', 'dl_stats_vds_download')
     def _get_vds_download(self, year=None, month=None, resource_id=None):
         """
         Gets versioned datastore download stats.
@@ -187,6 +238,7 @@ class DownloadStatistics(Statistics):
                 stats_dict[key][resource_type]['download_events'] += 1
         return dict(stats_dict)
 
+    @cache_region('statistics_long', 'dl_stats_gbif')
     def _get_gbif(self, year=None, month=None):
         """
         Gets GBIF download stats.
@@ -202,6 +254,7 @@ class DownloadStatistics(Statistics):
             stats_dict[key]['gbif']['download_events'] += result['events']
         return dict(stats_dict)
 
+    @cache_region('statistics_long', 'dl_stats_backfill')
     def _get_backfill(self, filename, year=None, month=None):
         """
         Gets stats from a static file.
