@@ -37,4 +37,4 @@ class StatisticsPlugin(SingletonPlugin):
     # IConfigurable
     def configure(self, config):
         # configure cache
-        configure_cache(config, 'statistics', 'ckanext_statistics')
+        configure_cache(config, 'statistics', ['statistics_short', 'statistics_long'])

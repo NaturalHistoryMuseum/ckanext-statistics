@@ -7,7 +7,7 @@ from beaker.cache import cache_region
 gbif_api_url = 'https://api.gbif.org/v1/occurrence/download/statistics'
 
 
-@cache_region('ckanext_statistics', 'gbif_stats')
+@cache_region('statistics_short', 'gbif_stats')
 def get_gbif_stats(year=None, month=None):
     """
     Retrieve download statistics from GBIF's API.
