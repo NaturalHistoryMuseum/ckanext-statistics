@@ -9,6 +9,7 @@ from ckan.plugins import SingletonPlugin, implements, interfaces
 from ckantools.cache import configure_cache
 from ckantools.loaders import create_actions, create_auth
 
+from ckanext.statistics import cli
 from ckanext.statistics.logic import (
     action as statistics_actions,
 )
@@ -25,6 +26,7 @@ class StatisticsPlugin(SingletonPlugin):
     implements(interfaces.IActions)
     implements(interfaces.IAuthFunctions)
     implements(interfaces.IConfigurable)
+    implements(interfaces.IClick)
 
     # IActions
     def get_actions(self):
@@ -38,3 +40,7 @@ class StatisticsPlugin(SingletonPlugin):
     def configure(self, config):
         # configure cache
         configure_cache(config, 'statistics', ['statistics_short', 'statistics_long'])
+
+    # IClick
+    def get_commands(self):
+        return cli.get_commands()
