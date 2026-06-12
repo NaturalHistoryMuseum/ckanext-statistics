@@ -23,7 +23,7 @@ dependencies = [
     "requests",
     "tqdm>=4.55.1",
     "ckanext-versioned-datastore>=5.1.0",
-    "ckantools>=0.4.2"
+    "ckantools>=0.6.0"
 ]
 
 [project.optional-dependencies]
