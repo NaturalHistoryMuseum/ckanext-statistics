@@ -5,7 +5,6 @@
 # Created by the Natural History Museum in London, UK
 
 
-import calendar
 import json
 from collections import OrderedDict, defaultdict
 from datetime import datetime as dt
@@ -46,18 +45,24 @@ class DownloadStatistics(Statistics):
         :returns: dict of stats
         """
         today = dt.now()
+
+        if year and (
+            year > today.year or (year == today.year and month and month > today.month)
+        ):
+            raise toolkit.ValidationError('Date is in the future')
+
         current_key = self._date_format(today)
-        query_start = dt(year=year or 1, month=month or 1, day=1)
-        query_end = dt(
-            year=year or today.year,
-            month=month or 12,
-            day=calendar.monthrange(year or today.year, month or 12)[1],
+        current_only = year == today.year and (month == today.month or today.month == 1)
+        current_included = (
+            current_only
+            or (year == today.year and month is None)
+            or (year is None and month == today.month)
+            or (year is None and month is None)
         )
 
         sources = []
 
         # if we're getting anything other than just the current month, get that first
-        current_only = year == today.year and (month == today.month or today.month == 1)
         if not current_only:
             sources.append(self._get_ckanpackager(year, month, resource_id))
             sources.append(self._get_vds_download(year, month, resource_id))
@@ -69,7 +74,7 @@ class DownloadStatistics(Statistics):
                 sources.append(self._get_backfill(backfill_filename, year, month))
 
         # if current month is included
-        if query_start <= today <= query_end:
+        if current_included:
             # delete current month from sources
             for source in sources:
                 try:
