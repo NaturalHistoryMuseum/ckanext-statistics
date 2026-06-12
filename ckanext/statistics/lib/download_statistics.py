@@ -107,6 +107,10 @@ class DownloadStatistics(Statistics):
                     self._get_backfill(backfill_filename, today.year, today.month)
                 )
 
+        sources.append(
+            self._get_empties([k for src in sources for k in src.keys()], year, month)
+        )
+
         def _combine(*items):
             not_null_items = [i for i in items if i is not None]
             if not not_null_items:
@@ -289,3 +293,33 @@ class DownloadStatistics(Statistics):
                 key = self._date_format(year=y, month=m)
                 stats_dict[key] = stats
         return stats_dict
+
+    def _get_empties(self, existing_keys, year=None, month=None):
+        """
+        Get "empty" months to fill in gaps.
+
+        :param existing_keys: keys already provided by other sources
+        :param year: stats from this year only (optional, default: None)
+        :param month: stats from this month only (optional, default: None)
+        :returns: dict of stats
+        """
+        today = dt.now()
+        if year and month:
+            return {self._date_format(year=year, month=month): self._init_stats_dict()}
+        if year:
+            return {
+                self._date_format(year=year, month=ix + 1): self._init_stats_dict()
+                for ix in range(12)
+            }
+
+        # find the years we've already got data for (current year if none)
+        existing_years = sorted([int(k.split('/')[1]) for k in existing_keys])
+        first_year = existing_years[0] if existing_years else today.year
+        months = [month] if month else [ix + 1 for ix in range(12)]
+        empties = {}
+        for y in range(first_year, today.year + 1):
+            for m in months:
+                if y >= today.year and m >= today.month:
+                    continue
+                empties[self._date_format(year=y, month=m)] = self._init_stats_dict()
+        return empties
