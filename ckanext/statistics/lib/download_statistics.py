@@ -9,6 +9,7 @@ import calendar
 import json
 from collections import OrderedDict, defaultdict
 from datetime import datetime as dt
+from operator import itemgetter
 from typing import Optional, Set
 
 import ckan.model as model
@@ -105,7 +106,7 @@ class DownloadStatistics(Statistics):
             not_null_items = [i for i in items if i is not None]
             if not not_null_items:
                 return None
-            if len(not_null_items) == 1:
+            if len(not_null_items) == 1 and not isinstance(not_null_items[0], dict):
                 return not_null_items[0]
             if len(set([type(i) for i in not_null_items])) > 1:
                 raise ValueError('Cannot combine different types.')
@@ -113,7 +114,7 @@ class DownloadStatistics(Statistics):
                 combined = {}
                 for k in set([ik for i in not_null_items for ik in i.keys()]):
                     combined[k] = _combine(*[i.get(k) for i in not_null_items])
-                return combined
+                return OrderedDict(sorted(combined.items(), key=itemgetter(0)))
             if isinstance(not_null_items[0], int):
                 return sum(not_null_items)
             else:
