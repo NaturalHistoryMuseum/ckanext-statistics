@@ -184,6 +184,7 @@ class DownloadStatistics(Statistics):
 
         :param year: stats from this year only (optional, default: None)
         :param month: stats from this month only (optional, default: None)
+        :param resource_id: stats for this resource only (optional, default: None)
         :returns: dict of stats
         """
         filters = []
@@ -212,6 +213,7 @@ class DownloadStatistics(Statistics):
 
         :param year: stats from this year only (optional, default: None)
         :param month: stats from this month only (optional, default: None)
+        :param resource_id: stats for this resource only (optional, default: None)
         :returns: dict of stats
         """
         base_query = model.Session.query(DownloadRequest)
