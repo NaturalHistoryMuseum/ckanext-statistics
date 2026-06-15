@@ -23,13 +23,13 @@ dependencies = [
     "requests",
     "tqdm>=4.55.1",
     "ckanext-versioned-datastore>=5.1.0",
-    "ckantools>=0.4.2"
+    "ckantools>=0.6.0"
 ]
 
 [project.optional-dependencies]
 test = [
     "mock",
-    "pytest>=4.6.5",
+    "pytest~=5.0.0",
     "pytest-cov>=2.7.1",
     "coveralls"
 ]
