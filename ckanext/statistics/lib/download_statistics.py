@@ -83,22 +83,9 @@ class DownloadStatistics(Statistics):
                     continue
 
             # invalidate cache for current month
-            ym = [today.year, today.month]
-            to_invalidate = [
-                (self._get_ckanpackager, [*ym, resource_id]),
-                (self._get_vds_download, [*ym, resource_id]),
-                (self._get_gbif, ym),
-                (self._get_backfill, [backfill_filename, *ym]),
-            ]
-            for func, func_args in to_invalidate:
-                region_invalidate(
-                    func,
-                    'statistics_long',
-                    func.__name__.replace('_get', 'dl_stats'),
-                    *func_args,
-                )
+            self._invalidate_cache(today.year, today.month, resource_id)
 
-            # get some stats for the current month
+            # refresh stats for the current month
             sources.append(self._get_ckanpackager(today.year, today.month, resource_id))
             sources.append(self._get_vds_download(today.year, today.month, resource_id))
             if not resource_id:
@@ -323,3 +310,27 @@ class DownloadStatistics(Statistics):
                     continue
                 empties[self._date_format(year=y, month=m)] = self._init_stats_dict()
         return empties
+
+    def _invalidate_cache(self, year, month, resource_id):
+        """
+        Invalidate the beaker cache for all the _get functions for the given year,
+        month, and resource ID.
+
+        :param year: stats from this year only (optional, default: None)
+        :param month: stats from this month only (optional, default: None)
+        :param resource_id: stats for this resource only (optional, default: None)
+        """
+        ym = [year, month]
+        to_invalidate = [
+            (self._get_ckanpackager, 'dl_stats_ckanpackager', [*ym, resource_id]),
+            (self._get_vds_download, 'dl_stats_vds_download', [*ym, resource_id]),
+            (self._get_gbif, 'dl_stats_gbif', ym),
+            (self._get_backfill, 'dl_stats_backfill', [backfill_filename, *ym]),
+        ]
+        for func, func_name, func_args in to_invalidate:
+            region_invalidate(
+                func,
+                'statistics_long',
+                func_name,
+                *func_args,
+            )
