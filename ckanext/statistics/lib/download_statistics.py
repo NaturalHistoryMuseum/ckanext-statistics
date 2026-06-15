@@ -243,7 +243,7 @@ class DownloadStatistics(Statistics):
                     has_research = True
                 elif resource_type == 'collections':
                     has_collections = True
-                stats_dict[key][resource_type]['records'] += rc
+                stats_dict[key][resource_type]['records'] += rc or 0
             # if a download contains both research and collections data, it gets
             # counted twice
             if has_research:
