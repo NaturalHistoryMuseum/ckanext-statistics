@@ -8,8 +8,8 @@
 import json
 from collections import OrderedDict, defaultdict
 from datetime import datetime as dt
+from functools import cached_property
 from operator import itemgetter
-from typing import Optional, Set
 
 import ckan.model as model
 from beaker.cache import cache_region, region_invalidate
@@ -30,10 +30,6 @@ class DownloadStatistics(Statistics):
     """
     Class used to implement the download statistics action.
     """
-
-    collection_resource_ids: Optional[Set[str]] = set(
-        toolkit.config.get('ckanext.statistics.resource_ids', '').split(' ')
-    )
 
     def get(self, year=None, month=None, resource_id=None):
         """
@@ -125,8 +121,16 @@ class DownloadStatistics(Statistics):
 
         return stats
 
-    @classmethod
-    def resource_type(cls, resource_id):
+    @cached_property
+    def collection_resource_ids(self):
+        """
+        Collections resource IDs from the config.
+
+        :returns: a set of resource IDs
+        """
+        return set(toolkit.config.get('ckanext.statistics.resource_ids', '').split(' '))
+
+    def resource_type(self, resource_id):
         """
         Returns the resource type (collections or research). Very simple set check as a
         method for convenience.
@@ -135,7 +139,7 @@ class DownloadStatistics(Statistics):
         :returns: 'collections' or 'research'
         """
         return (
-            'collections' if resource_id in cls.collection_resource_ids else 'research'
+            'collections' if resource_id in self.collection_resource_ids else 'research'
         )
 
     @staticmethod
