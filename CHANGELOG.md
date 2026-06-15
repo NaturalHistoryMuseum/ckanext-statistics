@@ -1,5 +1,49 @@
 # Changelog
 
+## v5.0.0 (2026-06-15)
+
+### Breaking Changes
+
+- use vds_basic_count and match all resources format
+
+### Feature
+
+- fill empty months
+- add cli and command to clear cache
+- cache download stats results except current month
+- define multiple caches
+- cache dataset_statistics methods
+
+### Fix
+
+- make collections resource ids a cached property
+- count download events as previously
+- adjust logic for if current month is included in results
+- return consistently ordered dicts
+
+### Refactor
+
+- abstract cache invalidation
+- remove monthly stats class and refactor download statistics
+- use ckantools to configure cache
+- **dataset**: use vds_basic_count and match all resources format
+- **dataset**: use vds_basic_count and anon context
+- remove unnecessary methods from Statistics class
+- load actions using ckantools
+
+### Docs
+
+- add missing param to docstrings
+
+### Tests
+
+- fix download_statistics tests
+
+### Build System(s)
+
+- use pytest v5
+- update ckantools version
+
 ## v4.0.1 (2025-08-11)
 
 ### Build System(s)
