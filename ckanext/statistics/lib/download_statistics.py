@@ -7,165 +7,23 @@
 
 import json
 from collections import OrderedDict, defaultdict
+from datetime import datetime as dt
+from functools import cached_property
+from operator import itemgetter
 
 import ckan.model as model
+from beaker.cache import cache_region, region_invalidate
 from ckan.plugins import toolkit
 from importlib_resources import files
+from sqlalchemy import sql
 
 from ckanext.statistics.model.ckanpackager import CKANPackagerStat
-from ckanext.versioned_datastore.model.downloads import DownloadRequest
+from ckanext.versioned_datastore.model.downloads import CoreFileRecord, DownloadRequest
 
 from ..lib.gbif_api import get_gbif_stats
 from ..lib.statistics import Statistics
-from ..logic.schema import statistics_downloads_schema
 
 backfill_filename = 'data-portal-backfill.json'
-
-
-class MonthlyStats(object):
-    """
-    Class used to keep track of the monthly download counts from multiple sources.
-    """
-
-    def __init__(self, month=None, year=None, resource_id=None):
-        """
-        :param month: if passed, only this month will be counted (defaults to None)
-        :param year: if passed, only this year will be counted (defaults to None)
-        :param resource_id: if passed, only this resource will be counted (defaults to None)
-        """
-        self.month = int(month) if month is not None else None
-        self.year = int(year) if year is not None else None
-        self.resource_id = resource_id
-
-        self.stats = defaultdict(
-            lambda: {
-                'collections': {
-                    'records': 0,
-                    'download_events': 0,
-                },
-                'research': {
-                    'records': 0,
-                    'download_events': 0,
-                },
-                'gbif': {
-                    'records': 0,
-                    'download_events': 0,
-                },
-            }
-        )
-        # extract the collection resource ids from the config
-        self.collection_resource_ids = toolkit.config.get(
-            'ckanext.statistics.resource_ids', set()
-        )
-        if self.collection_resource_ids:
-            self.collection_resource_ids = set(self.collection_resource_ids.split(' '))
-
-    def add(self, date, resource_id, count):
-        """
-        Updates the stats with the download event information for the given resource and
-        count at the given date.
-
-        :param date: the date of the download event
-        :param resource_id: the resource downloaded
-        :param count: the number of records downloaded
-        """
-        self.add_all(date, {resource_id: count})
-
-    def add_all(self, date, resource_counts):
-        """
-        Updates the stats with the download event information for the given resources
-        and counts at the given date. This function filters out information about
-        months/years/resources we're not interested in based on the parameters passed
-        during the construction of this object.
-
-        :param date: the date of the download event
-        :param resource_counts: a dict of resource ids -> counts
-        """
-        month_year = date.strftime('%-m/%Y')
-        month, year = map(int, month_year.split('/'))
-
-        # filter the download event
-        if self.resource_id is not None:
-            if self.resource_id in resource_counts:
-                # only update with counts for the resource id requested
-                resource_counts = {self.resource_id: resource_counts[self.resource_id]}
-            else:
-                return
-        if self.month is not None and self.month != month:
-            return
-        if self.year is not None and self.year != year:
-            return
-
-        for resource_id, count in resource_counts.items():
-            if resource_id in self.collection_resource_ids:
-                resource_type = 'collections'
-            else:
-                resource_type = 'research'
-            self.stats[month_year][resource_type]['records'] += count or 0
-
-        resources = set(resource_counts.keys())
-        if self.collection_resource_ids.intersection(resources):
-            self.stats[month_year]['collections']['download_events'] += 1
-
-        if resources.difference(self.collection_resource_ids):
-            self.stats[month_year]['research']['download_events'] += 1
-
-    def update_from_backfill(self, month, year, stats):
-        """
-        Adds the given stats for the given month and year to our stats dict. The month
-        and year filters will be applied if applicable.
-
-        :param month: the month
-        :param year: the year
-        :param stats: the stats in a dict, the format of this dict must match a
-            month/year entry in the self.stats dict
-        """
-        if self.month is not None and self.month != int(month):
-            return
-        if self.year is not None and self.year != int(year):
-            return
-
-        month_year = f'{month}/{year}'
-        for group in ('collections', 'research'):
-            for count_name in ('download_events', 'records'):
-                self.stats[month_year][group][count_name] += stats.get(group, {}).get(
-                    count_name, 0
-                )
-
-    def update_from_gbif(self, month, year, records, download_events):
-        """
-        Add gbif stats to this stats object.
-
-        :param month: the month
-        :param year: the year
-        :param records: the number of records downloaded
-        :param download_events: the number of download events
-        """
-        month = int(month)
-        year = int(year)
-        if self.month is not None and self.month != month:
-            return
-        if self.year is not None and self.year != year:
-            return
-
-        month_year = f'{month}/{year}'
-        records = int(records if records is not None else 0)
-        download_events = int(download_events if download_events is not None else 0)
-        self.stats[month_year]['gbif']['records'] += records
-        self.stats[month_year]['gbif']['download_events'] += download_events
-
-    def as_dict(self):
-        """
-        Return an OrderedDict of count stats in ascending chronological order.
-
-        :returns: an OrderedDict
-        """
-        return OrderedDict(
-            sorted(
-                self.stats.items(),
-                key=lambda x: tuple(map(int, reversed(x[0].split('/')))),
-            )
-        )
 
 
 class DownloadStatistics(Statistics):
@@ -173,88 +31,252 @@ class DownloadStatistics(Statistics):
     Class used to implement the download statistics action.
     """
 
-    schema = statistics_downloads_schema()
-
-    def _get_statistics(self, year=None, month=None, resource_id=None):
+    def get(self, year=None, month=None, resource_id=None):
         """
         Fetch the statistics.
 
-        :param year: (optional, default: None)
-        :param month: (optional, default: None)
-        :param resource_id: (optional, default: None)
+        :param year: get stats from this year only (optional, default: None)
+        :param month: get stats from this month only (optional, default: None)
+        :param resource_id: get stats for this resource only (optional, default: None)
         :returns: dict of stats
         """
-        monthly_stats = MonthlyStats(month, year, resource_id)
-        self.add_ckanpackager_stats(monthly_stats)
-        self.add_versioned_datastore_download_stats(monthly_stats)
+        today = dt.now()
 
-        # if no resource_id has been specified we can add the backfill and gbif stats as they aren't
-        # filterable by resource ID
-        if not resource_id:
-            self.add_backfill_stats(backfill_filename, monthly_stats)
-            self.add_gbif_stats(monthly_stats, year, month)
-
-        return monthly_stats.as_dict()
-
-    @staticmethod
-    def add_gbif_stats(monthly_stats, year=None, month=None):
-        """
-        Add the GBIF download stats to the monthly stats object.
-
-        :param monthly_stats: the MonthlyStats object to add the GBIF stats to
-        :param year: (optional, default: None)
-        :param month: (optional, default: None)
-        """
-
-        gbif_stats = get_gbif_stats(year, month)
-        for result in gbif_stats:
-            monthly_stats.update_from_gbif(
-                result['month'], result['year'], result['records'], result['events']
-            )
-
-    @staticmethod
-    def add_ckanpackager_stats(monthly_stats):
-        """
-        Updates the given MonthlyStats object with the ckan packager download stats.
-
-        Note: this function used to aggregate the statistics in the database using sql, however this
-        changed when the versioned datastore download stats were added and now it's all done in
-        Python. This is because the versioned datastore download stats are more complicated to parse
-        and aggregate as the record counts are stored in a JSONB column using the resource ids as
-        keys and the counts as values. Creating an SQL query to aggregate this would probably have
-        been possible but it would have been horrible to maintain and therefore handling it in
-        python made more sense. To then avoid having two completely different aggregation mechanisms
-        in the same area I decided to switch the ckan packager stats aggregation over to python too.
-
-        :param monthly_stats: a MonthlyStats object
-        """
-        for row in model.Session.query(CKANPackagerStat):
-            count = int(row.count) if row.count is not None else 0
-            monthly_stats.add(row.inserted_on, row.resource_id, count)
-
-    @staticmethod
-    def add_versioned_datastore_download_stats(monthly_stats):
-        """
-        Updates the given MonthlyStats object with the versioned datastore download
-        stats. Only "complete" downloads are counted.
-
-        :param monthly_stats: a MonthlyStats object
-        """
-        for download in model.Session.query(DownloadRequest).filter(
-            DownloadRequest.state == DownloadRequest.state_complete
+        if year and (
+            year > today.year or (year == today.year and month and month > today.month)
         ):
-            monthly_stats.add_all(
-                download.created, download.core_record.resource_totals
+            raise toolkit.ValidationError('Date is in the future')
+
+        current_key = self._date_format(today)
+        current_only = year == today.year and (month == today.month or today.month == 1)
+        current_included = (
+            current_only
+            or (year == today.year and month is None)
+            or (year is None and month == today.month)
+            or (year is None and month is None)
+        )
+
+        sources = []
+
+        # if we're getting anything other than just the current month, get that first
+        if not current_only:
+            sources.append(self._get_ckanpackager(year, month, resource_id))
+            sources.append(self._get_vds_download(year, month, resource_id))
+
+            # if no resource_id has been specified we can add the backfill and gbif
+            # stats as they aren't filterable by resource ID
+            if not resource_id:
+                sources.append(self._get_gbif(year, month))
+                sources.append(self._get_backfill(backfill_filename, year, month))
+
+        # if current month is included
+        if current_included:
+            # delete current month from sources
+            for source in sources:
+                try:
+                    del source[current_key]
+                except KeyError:
+                    continue
+
+            # invalidate cache for current month
+            self._invalidate_cache(today.year, today.month, resource_id)
+
+            # refresh stats for the current month
+            sources.append(self._get_ckanpackager(today.year, today.month, resource_id))
+            sources.append(self._get_vds_download(today.year, today.month, resource_id))
+            if not resource_id:
+                sources.append(self._get_gbif(today.year, today.month))
+                sources.append(
+                    self._get_backfill(backfill_filename, today.year, today.month)
+                )
+
+        sources.append(
+            self._get_empties([k for src in sources for k in src.keys()], year, month)
+        )
+
+        def _combine(*items):
+            not_null_items = [i for i in items if i is not None]
+            if not not_null_items:
+                return None
+            if len(not_null_items) == 1 and not isinstance(not_null_items[0], dict):
+                return not_null_items[0]
+            if len(set([type(i) for i in not_null_items])) > 1:
+                raise ValueError('Cannot combine different types.')
+            if isinstance(not_null_items[0], dict):
+                combined = {}
+                for k in set([ik for i in not_null_items for ik in i.keys()]):
+                    combined[k] = _combine(*[i.get(k) for i in not_null_items])
+                return OrderedDict(sorted(combined.items(), key=itemgetter(0)))
+            if isinstance(not_null_items[0], int):
+                return sum(not_null_items)
+            else:
+                raise Exception('Unable to combine.')
+
+        stats = OrderedDict(
+            sorted(
+                _combine(*sources).items(),
+                key=lambda x: tuple(map(int, reversed(x[0].split('/')))),
             )
+        )
+
+        return stats
+
+    @cached_property
+    def collection_resource_ids(self):
+        """
+        Collections resource IDs from the config.
+
+        :returns: a set of resource IDs
+        """
+        return set(toolkit.config.get('ckanext.statistics.resource_ids', '').split(' '))
+
+    def resource_type(self, resource_id):
+        """
+        Returns the resource type (collections or research). Very simple set check as a
+        method for convenience.
+
+        :param resource_id: the ID of the resource to check
+        :returns: 'collections' or 'research'
+        """
+        return (
+            'collections' if resource_id in self.collection_resource_ids else 'research'
+        )
 
     @staticmethod
-    def add_backfill_stats(filename, monthly_stats):
+    def _date_format(date=None, year=None, month=None):
         """
-        Updates the MonthlyStats object with static data from a json file that can be
-        used to fill gaps in the API's returned statistics.
+        Returns a "month/year" string from year and month or full datetime object. Pass
+        either year and month OR date.
+
+        :param date: the full date (optional, default: None)
+        :param year: the year (optional, default: None)
+        :param month: the month (optional, default: None)
+        :returns: datestring
+        """
+        if date:
+            return date.strftime('%-m/%Y')
+        elif year and month:
+            return f'{month}/{year}'
+        raise ValueError
+
+    @staticmethod
+    def _init_stats_dict():
+        """
+        Returns the standard format for a single month's entry.
+
+        Useful for initialising defaultdicts.
+        """
+        return {
+            'collections': {
+                'records': 0,
+                'download_events': 0,
+            },
+            'research': {
+                'records': 0,
+                'download_events': 0,
+            },
+            'gbif': {
+                'records': 0,
+                'download_events': 0,
+            },
+        }
+
+    @cache_region('statistics_long', 'dl_stats_ckanpackager')
+    def _get_ckanpackager(self, year=None, month=None, resource_id=None):
+        """
+        Gets ckanpackager download stats.
+
+        :param year: stats from this year only (optional, default: None)
+        :param month: stats from this month only (optional, default: None)
+        :param resource_id: stats for this resource only (optional, default: None)
+        :returns: dict of stats
+        """
+        filters = []
+        if year is not None:
+            filters.append((sql.extract('year', CKANPackagerStat.inserted_on) == year))
+        if month is not None:
+            filters.append(
+                (sql.extract('month', CKANPackagerStat.inserted_on) == month)
+            )
+        if resource_id is not None:
+            filters.append((CKANPackagerStat.resource_id == resource_id))
+
+        stats_dict = defaultdict(self._init_stats_dict)
+        for download in model.Session.query(CKANPackagerStat).filter(*filters):
+            count = int(download.count) if download.count is not None else 0
+            key = self._date_format(date=download.inserted_on)
+            resource_type = self.resource_type(download.resource_id)
+            stats_dict[key][resource_type]['records'] += count
+            stats_dict[key][resource_type]['download_events'] += 1
+        return dict(stats_dict)
+
+    @cache_region('statistics_long', 'dl_stats_vds_download')
+    def _get_vds_download(self, year=None, month=None, resource_id=None):
+        """
+        Gets versioned datastore download stats.
+
+        :param year: stats from this year only (optional, default: None)
+        :param month: stats from this month only (optional, default: None)
+        :param resource_id: stats for this resource only (optional, default: None)
+        :returns: dict of stats
+        """
+        base_query = model.Session.query(DownloadRequest)
+        filters = [(DownloadRequest.state == DownloadRequest.state_complete)]
+        if year is not None:
+            filters.append((sql.extract('year', DownloadRequest.created) == year))
+        if month is not None:
+            filters.append((sql.extract('month', DownloadRequest.created) == month))
+        if resource_id is not None:
+            base_query = base_query.join(CoreFileRecord)
+            filters.append(
+                (CoreFileRecord.resource_ids_and_versions.op('?')(resource_id))
+            )
+
+        stats_dict = defaultdict(self._init_stats_dict)
+        for download in base_query.filter(*filters):
+            key = self._date_format(date=download.created)
+            has_research = False
+            has_collections = False
+            for rid, rc in download.core_record.resource_totals.items():
+                resource_type = self.resource_type(rid)
+                if resource_type == 'research':
+                    has_research = True
+                elif resource_type == 'collections':
+                    has_collections = True
+                stats_dict[key][resource_type]['records'] += rc
+            # if a download contains both research and collections data, it gets
+            # counted twice
+            if has_research:
+                stats_dict[key]['research']['download_events'] += 1
+            if has_collections:
+                stats_dict[key]['collections']['download_events'] += 1
+        return dict(stats_dict)
+
+    @cache_region('statistics_long', 'dl_stats_gbif')
+    def _get_gbif(self, year=None, month=None):
+        """
+        Gets GBIF download stats.
+
+        :param year: stats from this year only (optional, default: None)
+        :param month: stats from this month only (optional, default: None)
+        :returns: dict of stats
+        """
+        stats_dict = defaultdict(self._init_stats_dict)
+        for result in get_gbif_stats(year, month):
+            key = self._date_format(year=result['year'], month=result['month'])
+            stats_dict[key]['gbif']['records'] += result['records']
+            stats_dict[key]['gbif']['download_events'] += result['events']
+        return dict(stats_dict)
+
+    @cache_region('statistics_long', 'dl_stats_backfill')
+    def _get_backfill(self, filename, year=None, month=None):
+        """
+        Gets stats from a static file.
 
         :param filename: the name of the json file containing the statistics
-        :param monthly_stats: a MonthlyStats object
+        :param year: stats from this year only (optional, default: None)
+        :param month: stats from this month only (optional, default: None)
+        :returns: dict of stats
         """
         if filename is None:
             return
@@ -262,6 +284,70 @@ class DownloadStatistics(Statistics):
         backfill_file = files('ckanext.statistics.data').joinpath(filename)
         backfill_data = json.loads(backfill_file.read_text())
 
-        for year in backfill_data:
-            for month, stats in backfill_data[year].items():
-                monthly_stats.update_from_backfill(month, year, stats)
+        query_data = backfill_data
+        if year:
+            query_data = {year: query_data.get(str(year), {})}
+        # for month it's easier to just iterate
+
+        stats_dict = {}
+        for y, months in query_data.items():
+            for m, stats in months.items():
+                if month and m != str(month):
+                    continue
+                key = self._date_format(year=y, month=m)
+                stats_dict[key] = stats
+        return stats_dict
+
+    def _get_empties(self, existing_keys, year=None, month=None):
+        """
+        Get "empty" months to fill in gaps.
+
+        :param existing_keys: keys already provided by other sources
+        :param year: stats from this year only (optional, default: None)
+        :param month: stats from this month only (optional, default: None)
+        :returns: dict of stats
+        """
+        today = dt.now()
+        if year and month:
+            return {self._date_format(year=year, month=month): self._init_stats_dict()}
+        if year:
+            return {
+                self._date_format(year=year, month=ix + 1): self._init_stats_dict()
+                for ix in range(12)
+            }
+
+        # find the years we've already got data for (current year if none)
+        existing_years = sorted([int(k.split('/')[1]) for k in existing_keys])
+        first_year = existing_years[0] if existing_years else today.year
+        months = [month] if month else [ix + 1 for ix in range(12)]
+        empties = {}
+        for y in range(first_year, today.year + 1):
+            for m in months:
+                if y >= today.year and m >= today.month:
+                    continue
+                empties[self._date_format(year=y, month=m)] = self._init_stats_dict()
+        return empties
+
+    def _invalidate_cache(self, year, month, resource_id):
+        """
+        Invalidate the beaker cache for all the _get functions for the given year,
+        month, and resource ID.
+
+        :param year: stats from this year only (optional, default: None)
+        :param month: stats from this month only (optional, default: None)
+        :param resource_id: stats for this resource only (optional, default: None)
+        """
+        ym = [year, month]
+        to_invalidate = [
+            (self._get_ckanpackager, 'dl_stats_ckanpackager', [*ym, resource_id]),
+            (self._get_vds_download, 'dl_stats_vds_download', [*ym, resource_id]),
+            (self._get_gbif, 'dl_stats_gbif', ym),
+            (self._get_backfill, 'dl_stats_backfill', [backfill_filename, *ym]),
+        ]
+        for func, func_name, func_args in to_invalidate:
+            region_invalidate(
+                func,
+                'statistics_long',
+                func_name,
+                *func_args,
+            )

@@ -5,10 +5,17 @@
 # Created by the Natural History Museum in London, UK
 
 
-from beaker.cache import cache_regions
 from ckan.plugins import SingletonPlugin, implements, interfaces
+from ckantools.cache import configure_cache
+from ckantools.loaders import create_actions, create_auth
 
-from ckanext.statistics.logic.action import dataset_statistics, download_statistics
+from ckanext.statistics import cli
+from ckanext.statistics.logic import (
+    action as statistics_actions,
+)
+from ckanext.statistics.logic import (
+    auth as statistics_auth,
+)
 
 
 class StatisticsPlugin(SingletonPlugin):
@@ -17,21 +24,23 @@ class StatisticsPlugin(SingletonPlugin):
     """
 
     implements(interfaces.IActions)
+    implements(interfaces.IAuthFunctions)
     implements(interfaces.IConfigurable)
+    implements(interfaces.IClick)
 
     # IActions
-    @staticmethod
-    def get_actions():
-        return {
-            'download_statistics': download_statistics,
-            'dataset_statistics': dataset_statistics,
-        }
+    def get_actions(self):
+        return create_actions(statistics_actions)
+
+    # IAuthFunctions
+    def get_auth_functions(self):
+        return create_auth(statistics_auth)
 
     # IConfigurable
     def configure(self, config):
         # configure cache
-        options = {}
-        for k, v in config.items():
-            if k.startswith('ckanext.statistics.cache.'):
-                options[k.split('.')[-1]] = v
-        cache_regions.update({'ckanext_statistics': options})
+        configure_cache(config, 'statistics', ['statistics_short', 'statistics_long'])
+
+    # IClick
+    def get_commands(self):
+        return cli.get_commands()
