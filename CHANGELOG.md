@@ -1,5 +1,11 @@
 # Changelog
 
+## v5.0.1 (2026-06-15)
+
+### Fix
+
+- default record count to 0
+
 ## v5.0.0 (2026-06-15)
 
 ### Breaking Changes
