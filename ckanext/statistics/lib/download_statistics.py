@@ -231,10 +231,21 @@ class DownloadStatistics(Statistics):
         stats_dict = defaultdict(self._init_stats_dict)
         for download in base_query.filter(*filters):
             key = self._date_format(date=download.created)
+            has_research = False
+            has_collections = False
             for rid, rc in download.core_record.resource_totals.items():
                 resource_type = self.resource_type(rid)
+                if resource_type == 'research':
+                    has_research = True
+                elif resource_type == 'collections':
+                    has_collections = True
                 stats_dict[key][resource_type]['records'] += rc
-                stats_dict[key][resource_type]['download_events'] += 1
+            # if a download contains both research and collections data, it gets
+            # counted twice
+            if has_research:
+                stats_dict[key]['research']['download_events'] += 1
+            if has_collections:
+                stats_dict[key]['collections']['download_events'] += 1
         return dict(stats_dict)
 
     @cache_region('statistics_long', 'dl_stats_gbif')
