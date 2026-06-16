@@ -313,7 +313,7 @@ class DownloadStatistics(Statistics):
         if year:
             return {
                 self._date_format(year=year, month=ix + 1): self._init_stats_dict()
-                for ix in range(12)
+                for ix in range(today.month if year == today.year else 12)
             }
 
         # find the years we've already got data for (current year if none)
