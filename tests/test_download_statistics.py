@@ -237,12 +237,16 @@ class TestDownloadStatistics(object):
 
         assert '1/2019' in returned_stats
         assert returned_stats['1/2019']['collections'] == {
-            'download_events': 1,
+            'download_events': 0,
             'records': 100,
         }
         assert returned_stats['1/2019']['research'] == {
-            'download_events': 1,
+            'download_events': 0,
             'records': 32,
+        }
+        assert returned_stats['1/2019']['mixed'] == {
+            'download_events': 1,
+            'records': 0,
         }
         assert '3/2019' in returned_stats
         assert returned_stats['3/2019']['research'] == {
