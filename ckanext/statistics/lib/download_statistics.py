@@ -246,7 +246,7 @@ class DownloadStatistics(Statistics):
                 stats_dict[key][resource_type]['records'] += rc or 0
             if len(res_types) > 1:
                 stats_dict[key]['mixed']['download_events'] += 1
-            else:
+            elif len(res_types) == 1:
                 stats_dict[key][list(res_types)[0]]['download_events'] += 1
         return dict(stats_dict)
 
