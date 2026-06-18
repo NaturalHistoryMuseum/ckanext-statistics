@@ -22,7 +22,7 @@ _A CKAN extension for accessing instance statistics._
 <!--overview-start-->
 Shows statistics for datasets and downloads on the CKAN instance.
 
-**NB**: This extension currently only works with the Natural History Museum's theme extension [ckanext-nhm](https://github.com/NaturalHistoryMuseum/ckanext-nhm).
+**NB**: This extension currently only works for the Natural History Museum, London, due to [embedded data](https://github.com/NaturalHistoryMuseum/ckanext-statistics/issues/64).
 
 <!--overview-end-->
 
@@ -87,13 +87,23 @@ These are the options that can be specified in your .ini config file.
 
 ## Cache settings
 
-These settings are used to directly configure a [beaker cache region](https://beaker.readthedocs.io/en/latest/modules/cache.html) named `ckanext_statistics`. Please see their [configuration docs](https://beaker.readthedocs.io/en/latest/configuration.html) for more information and additional options.
+This extension uses two named [Beaker cache regions](https://beaker.readthedocs.io/en/latest/modules/cache.html): `statistics_short` (intended for relatively short-term caching, e.g. 1 day) and `statistics_long` (intended for more persistent, long-term caching, e.g. 1 week). Neither of these have any default settings configured, and they can either be configured together or separately.
+
+To define a setting for both caches:
 
 | Name                              | Description                                       | Example                    |
 |-----------------------------------|---------------------------------------------------|----------------------------|
 | `ckanext.statistics.cache.type`   | Cache backend.                                    | `ext:redis`                |
 | `ckanext.statistics.cache.url`    | URL for the backend.                              | `redis://localhost:6379/0` |
-| `ckanext.statistics.cache.expire` | Time until the cache content expires, in seconds. | `3600`                     |
+
+To define settings separately:
+
+| Name                                                       | Description                                               | Example  |
+|------------------------------------------------------------|-----------------------------------------------------------|----------|
+| `ckanext.statistics.cache._region.statistics_short.expire` | Expire time in seconds for the `statistics_short` region. | `86400`  |
+| `ckanext.statistics.cache._region.statistics_long.expire`  | Expire time in seconds for the `statistics_long` region.  | `604800` |
+
+Please see Beaker's [configuration docs](https://beaker.readthedocs.io/en/latest/configuration.html) for more information and additional options.
 
 <!--configuration-end-->
 
