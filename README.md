@@ -22,7 +22,7 @@ _A CKAN extension for accessing instance statistics._
 <!--overview-start-->
 Shows statistics for datasets and downloads on the CKAN instance.
 
-**NB**: This extension currently only works with the Natural History Museum's theme extension [ckanext-nhm](https://github.com/NaturalHistoryMuseum/ckanext-nhm).
+**NB**: This extension currently only works for the Natural History Museum, London, due to [embedded data](https://github.com/NaturalHistoryMuseum/ckanext-statistics/issues/64).
 
 <!--overview-end-->
 
