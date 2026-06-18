@@ -1,5 +1,27 @@
 # Changelog
 
+## v6.0.0 (2026-06-18)
+
+### Breaking Changes
+
+- count mixed downloads separately
+
+### Fix
+
+- don't count null downloads
+- wrong number
+- **downloads**: count mixed downloads separately
+- remove empty months that haven't happened yet
+
+### Docs
+
+- update statement about only working for nhm
+- update cache config docs
+
+### Tests
+
+- add mixed downloads to vds test
+
 ## v5.0.1 (2026-06-15)
 
 ### Fix
