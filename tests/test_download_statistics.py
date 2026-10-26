@@ -9,16 +9,16 @@ from datetime import datetime
 from unittest.mock import MagicMock, patch
 
 import pytest
+from ckanext.versioned_datastore.model import details, downloads, slugs, stats
+from ckanext.versioned_datastore.model.downloads import (
+    CoreFileRecord,
+    DownloadRequest,
+)
 
 from ckanext.statistics.lib.download_statistics import DownloadStatistics
 from ckanext.statistics.model.ckanpackager import (
     CKANPackagerStat,
     ckanpackager_stats_table,
-)
-from ckanext.versioned_datastore.model import details, downloads, slugs, stats
-from ckanext.versioned_datastore.model.downloads import (
-    CoreFileRecord,
-    DownloadRequest,
 )
 
 
