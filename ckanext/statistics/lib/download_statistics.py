@@ -132,8 +132,9 @@ class DownloadStatistics(Statistics):
 
     def resource_type(self, resource_id):
         """
-        Returns the resource type (collections or research). Very simple set check as a
-        method for convenience.
+        Returns the resource type (collections or research).
+
+        Very simple set check as a method for convenience.
 
         :param resource_id: the ID of the resource to check
         :returns: 'collections' or 'research'
@@ -145,8 +146,9 @@ class DownloadStatistics(Statistics):
     @staticmethod
     def _date_format(date=None, year=None, month=None):
         """
-        Returns a "month/year" string from year and month or full datetime object. Pass
-        either year and month OR date.
+        Returns a "month/year" string from year and month or full datetime object.
+
+        Pass either year and month OR date.
 
         :param date: the full date (optional, default: None)
         :param year: the year (optional, default: None)

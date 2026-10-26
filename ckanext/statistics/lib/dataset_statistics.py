@@ -81,8 +81,9 @@ class DatasetStatistics(Statistics):
     @cache_region('statistics_short', 'ds_stats_one')
     def _get_resource_statistics(self, resource_id):
         """
-        Get stats for an individual resource. Allows searching private datasets.
+        Get stats for an individual resource.
 
+        Allows searching private datasets.
         :param resource_id: the ID of the resource to retrieve stats for
         """
         try:

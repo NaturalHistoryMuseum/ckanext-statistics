@@ -119,16 +119,9 @@ Statistics for downloads of datasets from the instance.
 from ckan.plugins import toolkit
 
 # all of these filters are optional
-data_dict = {
-                'resource_id': RESOURCE_ID,
-                'year': YEAR,
-                'month': MONTH
-            }
+data_dict = {'resource_id': RESOURCE_ID, 'year': YEAR, 'month': MONTH}
 
-toolkit.get_action('download_statistics')(
-    context,
-    data_dict
-)
+toolkit.get_action('download_statistics')(context, data_dict)
 ```
 
 ### `dataset_statistics`
@@ -139,13 +132,10 @@ from ckan.plugins import toolkit
 
 # these filters are optional
 data_dict = {
-                'resource_id': RESOURCE_ID,
-            }
+    'resource_id': RESOURCE_ID,
+}
 
-toolkit.get_action('dataset_statistics')(
-    context,
-    data_dict
-)
+toolkit.get_action('dataset_statistics')(context, data_dict)
 ```
 
 <!--usage-end-->
